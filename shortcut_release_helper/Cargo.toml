@@ -1,0 +1,26 @@
+[package]
+name = "shortcut_release_helper"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+shortcut_client = { path = "../shortcut_client" }
+anyhow = "1"
+clap = { version = "3", features = ["derive"] }
+derive_more = "0.99"
+futures = "0.3"
+git2 = "0.13"
+governor = "0.4"
+itertools = "0.10"
+minijinja = "0.14"
+lazy_static = "1"
+pin-project = "1"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full", "tracing"] }
+toml = "0.4"
+tracing = "0.1"
+tracing-subscriber = "0.2"
