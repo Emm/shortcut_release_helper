@@ -1194,6 +1194,7 @@ dependencies = [
 name = "shortcut_release_helper"
 version = "0.1.0"
 dependencies = [
+ "ansi_term",
  "anyhow",
  "clap",
  "derive_more",

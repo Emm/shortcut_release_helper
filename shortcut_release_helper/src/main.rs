@@ -33,9 +33,14 @@ extern crate derive_more;
 
 use std::{collections::HashMap, fs, path::PathBuf, time::Instant};
 
+use ansi_term::{
+    Colour::{Blue, Green, Red},
+    Style,
+};
 use anyhow::Result;
 use clap::Parser;
 use git::Repository;
+use shortcut::Release;
 use tracing::{debug, info};
 use tracing_subscriber;
 
@@ -87,6 +92,30 @@ fn find_unreleased_commits(
     Ok(commits)
 }
 
+fn print_summary(release: &Release) {
+    let header_style = Style::new().bold();
+    println!(
+        "{}: {}",
+        header_style.paint("Total stories"),
+        Green.paint(&release.stories.len().to_string())
+    );
+    println!(
+        "\n{}: {}",
+        header_style.paint("Total epics"),
+        Green.paint(&release.epics.len().to_string())
+    );
+    for (repo, commits) in &release.unparsed_commits {
+        if !commits.is_empty() {
+            println!(
+                "\n{}{}: {}",
+                header_style.paint("Total unparsed commits in "),
+                Blue.paint(repo.as_ref()),
+                Red.paint(&commits.len().to_string())
+            );
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -110,6 +139,7 @@ async fn main() -> Result<()> {
     debug!("Got result {:?}", parsed_commits);
     let shortcut_client = ShortcutClient::new(&config.api_key);
     let release = shortcut_client.get_release(parsed_commits).await?;
+    print_summary(&release);
     template.render_to_file(&release, &args.output_file)?;
     Ok(())
 }
