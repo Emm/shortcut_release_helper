@@ -1,7 +1,10 @@
-//! An utility to find all Shortcut tickets for a future release.
+//! An utility to find all Shortcut stories for a future release.
 //!
 //! This tool, given a list of repository and, for each repository, a **release** branch and a
-//! **next** branch, finds all commits only present in the **next** branch.
+//! **next** branch, finds all commits only present in the **next** branch. It then attempts to
+//! locate [Shortcut](https://shortcut.com/) stories linked to each commit, as well as any epic
+//! these stories may belong to. Finally, it produces a Markdown release notes file based on a
+//! template.
 //!
 //! # Usage
 //!
