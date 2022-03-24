@@ -9,7 +9,11 @@
 //! # Usage
 //!
 //! ```bash
-//! $ ./shortcut_release_helper
+//! $ ./shortcut_release_helper \
+//!     --version 3.4.0 \
+//!     --name 'Super release' \
+//!     --description 'Exciting release' \
+//!     notes.md
 //! ```
 //!
 //! # Configuration
@@ -43,9 +47,12 @@ use ansi_term::{
 use anyhow::Result;
 use clap::Parser;
 use git::Repository;
-use shortcut::Release;
+use serde::Serialize;
+use shortcut::ReleaseContent;
+use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
 use tracing_subscriber;
+use types::RepoToCommits;
 
 use crate::types::{RepositoryConfiguration, RepositoryName, UnreleasedCommit};
 use crate::{config::AppConfig, shortcut::parse_commits, shortcut::ShortcutClient};
@@ -57,10 +64,21 @@ mod template;
 mod template_utils;
 mod types;
 
+/// A command-line tool to generate release notes.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
+    /// Output file for the release notes
     output_file: PathBuf,
+    /// Version to release
+    #[clap(long)]
+    version: Option<String>,
+    /// Name of the release
+    #[clap(long)]
+    name: Option<String>,
+    /// Description of the release
+    #[clap(long)]
+    description: Option<String>,
 }
 
 #[tracing::instrument(level = "info", skip_all, fields(repo = %repo_name))]
@@ -95,7 +113,7 @@ fn find_unreleased_commits(
     Ok(commits)
 }
 
-fn print_summary(release: &Release) {
+fn print_summary(release: &ReleaseContent) {
     let header_style = Style::new().bold();
     println!(
         "{}: {}",
@@ -117,6 +135,16 @@ fn print_summary(release: &Release) {
             );
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Release<'a> {
+    pub name: Option<&'a str>,
+    pub version: Option<&'a str>,
+    pub description: Option<&'a str>,
+    pub stories: Vec<Story>,
+    pub epics: Vec<Epic>,
+    pub unparsed_commits: RepoToCommits,
 }
 
 #[tokio::main]
@@ -141,8 +169,16 @@ async fn main() -> Result<()> {
     let parsed_commits = parse_commits(repo_names_and_commits)?;
     debug!("Got result {:?}", parsed_commits);
     let shortcut_client = ShortcutClient::new(&config.api_key);
-    let release = shortcut_client.get_release(parsed_commits).await?;
-    print_summary(&release);
+    let release_content = shortcut_client.get_release(parsed_commits).await?;
+    print_summary(&release_content);
+    let release = Release {
+        name: args.name.as_deref(),
+        version: args.version.as_deref(),
+        description: args.description.as_deref(),
+        stories: release_content.stories,
+        epics: release_content.epics,
+        unparsed_commits: release_content.unparsed_commits,
+    };
     template.render_to_file(&release, &args.output_file)?;
     Ok(())
 }

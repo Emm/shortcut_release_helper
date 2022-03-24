@@ -8,7 +8,7 @@ use minijinja::{
     Environment, ErrorKind, State,
 };
 
-use crate::{shortcut::Release, template_utils::SeqIterator};
+use crate::{template_utils::SeqIterator, Release};
 
 #[derive(Debug)]
 pub struct FileTemplate<'a> {
@@ -136,7 +136,11 @@ impl<'a> FileTemplate<'a> {
         Ok(Value::from(vec![matched, unmatched]))
     }
 
-    fn split_by_epic<'s>(_state: &State, v: Value, epic_id: Value) -> Result<Value, minijinja::Error> {
+    fn split_by_epic<'s>(
+        _state: &State,
+        v: Value,
+        epic_id: Value,
+    ) -> Result<Value, minijinja::Error> {
         if !matches!(epic_id.kind(), ValueKind::Number) {
             return Err(minijinja::Error::new(
                 ErrorKind::ImpossibleOperation,

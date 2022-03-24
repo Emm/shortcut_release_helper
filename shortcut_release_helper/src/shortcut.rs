@@ -113,13 +113,13 @@ impl ShortcutClient {
         Ok(items)
     }
 
-    pub async fn get_release(&self, commits: Commits) -> Result<Release> {
+    pub async fn get_release(&self, commits: Commits) -> Result<ReleaseContent> {
         let stories = self.get_stories(&commits).await?;
         let epics = self.get_epics(stories.iter()).await?;
         let Commits {
             unparsed_commits, ..
         } = commits;
-        let release = Release {
+        let release = ReleaseContent {
             stories,
             epics,
             unparsed_commits,
@@ -158,7 +158,7 @@ impl ShortcutClient {
 pub struct StoryId(u32);
 
 #[derive(Debug, Serialize)]
-pub struct Release {
+pub struct ReleaseContent {
     pub stories: Vec<Story>,
     pub epics: Vec<Epic>,
     pub unparsed_commits: RepoToCommits,
