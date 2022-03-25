@@ -4,6 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Result;
+use chrono::offset::Utc;
 use minijinja::{
     value::{Value, ValueKind},
     Environment, ErrorKind, State,
@@ -29,6 +30,7 @@ impl<'a> FileTemplate<'a> {
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+        environment.add_function("today", Self::today);
         Ok(Self { environment })
     }
 
@@ -106,6 +108,16 @@ impl<'a> FileTemplate<'a> {
             };
         }
         Ok(Value::from(vec![matched, unmatched]))
+    }
+
+    /// Helper returning today's date, formatted according to a format string following
+    /// [`chrono::format::strftime`] (if present), otherwise defaults to `YYYY-MM-DD`.
+    fn today<'s>(_state: &State, fmt: Option<String>) -> Result<Value, minijinja::Error> {
+        Ok(Value::from_safe_string(
+            Utc::today()
+                .format(fmt.as_deref().unwrap_or("%F"))
+                .to_string(),
+        ))
     }
 
     pub fn render_to_file(&self, release: &Release, output_file: &PathBuf) -> Result<()> {

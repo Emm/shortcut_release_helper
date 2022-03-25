@@ -9,6 +9,7 @@ edition = "2021"
 shortcut_client = { path = "../shortcut_client" }
 ansi_term = "0.12"
 anyhow = "1"
+chrono = "0.4"
 clap = { version = "3", features = ["derive"] }
 derive_more = "0.99"
 futures = "0.3"
