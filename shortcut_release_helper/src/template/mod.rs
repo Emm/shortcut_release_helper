@@ -19,17 +19,10 @@ pub struct FileTemplate<'a> {
 
 const TEMPLATE_NAME: &'static str = "main";
 
-#[derive(Clone, Copy)]
-enum EpicStoriesState {
-    AllDone,
-    NotAllDone,
-}
-
 impl<'a> FileTemplate<'a> {
     pub fn new(template_content: &'a str) -> Result<Self> {
         let mut environment = Environment::new();
         environment.add_template(TEMPLATE_NAME, template_content)?;
-        environment.add_filter("epic_stories_state", Self::epic_stories_state);
         environment.add_filter(
             "split_by_epic_stories_state",
             Self::split_by_epic_stories_state,
@@ -37,52 +30,6 @@ impl<'a> FileTemplate<'a> {
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
         Ok(Self { environment })
-    }
-
-    /// Filters the epics depending on whether all stories are done or not.
-    fn epic_stories_state<'s>(
-        _state: &State,
-        v: Value,
-        state: Value,
-    ) -> Result<Value, minijinja::Error> {
-        let state = if matches!(state.kind(), ValueKind::String) {
-            let state = state.as_str().expect("Should be a string");
-            match state {
-                "all_done" => EpicStoriesState::AllDone,
-                "not_all_done" => EpicStoriesState::NotAllDone,
-                _ => {
-                    return Err(minijinja::Error::new(
-                        ErrorKind::ImpossibleOperation,
-                        "expected 'all_done' or 'not_all_done'",
-                    ));
-                }
-            }
-        } else {
-            return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
-                "expected a string",
-            ));
-        };
-        let epics_iter = SeqIterator::new(v)?;
-        let matched =
-            epics_iter
-                .map(|epic| {
-                    let stats = epic.get_attr("stats")?;
-                    let num_stories_total = stats.get_attr("num_stories_total")?;
-                    let num_stories_done = stats.get_attr("num_stories_done")?;
-                    Ok((epic, num_stories_total, num_stories_done))
-                })
-                .filter_map_ok(|(epic, num_stories_total, num_stories_done)| {
-                    let all_done = num_stories_total == num_stories_done;
-                    match (state, all_done) {
-                        (EpicStoriesState::AllDone, true)
-                        | (EpicStoriesState::NotAllDone, false) => Some(epic),
-                        (EpicStoriesState::AllDone, false)
-                        | (EpicStoriesState::NotAllDone, true) => None,
-                    }
-                })
-                .collect::<Result<Vec<_>, minijinja::Error>>()?;
-        Ok(Value::from(matched))
     }
 
     fn split_by_label<'s>(
