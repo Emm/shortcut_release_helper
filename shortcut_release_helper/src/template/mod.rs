@@ -23,14 +23,18 @@ const TEMPLATE_NAME: &'static str = "main";
 impl<'a> FileTemplate<'a> {
     pub fn new(template_content: &'a str) -> Result<Self> {
         let mut environment = Environment::new();
+
         environment.add_template(TEMPLATE_NAME, template_content)?;
+
         environment.add_filter(
             "split_by_epic_stories_state",
             Self::split_by_epic_stories_state,
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+
         environment.add_function("today", Self::today);
+
         Ok(Self { environment })
     }
 
