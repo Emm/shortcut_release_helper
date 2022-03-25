@@ -34,6 +34,7 @@ impl<'a> FileTemplate<'a> {
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+        environment.add_filter("indent", Self::indent);
         environment.add_filter("escape", Self::escape);
 
         environment.add_function("today", Self::today);
@@ -61,6 +62,41 @@ impl<'a> FileTemplate<'a> {
             _ => v,
         };
         Ok(v)
+    }
+
+    /// Indent multiline text by prefixing the platform's linebreak in the value by the amount of
+    /// spaces indicated.
+    fn indent(_state: &State, v: Value, amount: Value) -> Result<Value, minijinja::Error> {
+        #[cfg(windows)]
+        const LINE_ENDING: &'static str = "\r\n";
+        #[cfg(not(windows))]
+        const LINE_ENDING: &'static str = "\n";
+
+        let v = if matches!(v.kind(), ValueKind::String) {
+            v.as_str().expect("Should be a string")
+        } else {
+            return Err(minijinja::Error::new(
+                ErrorKind::ImpossibleOperation,
+                "expected a string",
+            ));
+        };
+
+        let amount = if matches!(amount.kind(), ValueKind::Number) {
+            amount.to_string().parse::<usize>().map_err(|err| {
+                minijinja::Error::new(
+                    ErrorKind::ImpossibleOperation,
+                    format!("could not parse number, got {:?}", err),
+                )
+            })
+        } else {
+            Err(minijinja::Error::new(
+                ErrorKind::ImpossibleOperation,
+                "expected a number",
+            ))
+        }?;
+        let replacement = format!("{LINE_ENDING} {:amount$}", "");
+        let v = v.replace(LINE_ENDING, &replacement);
+        Ok(Value::from(v))
     }
 
     fn split_by_label<'s>(
