@@ -1,14 +1,16 @@
+mod utils;
+
 use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use itertools::Itertools;
 use minijinja::{
     value::{Value, ValueKind},
     Environment, ErrorKind, State,
 };
 
-use crate::{template_utils::SeqIterator, Release};
+use crate::Release;
+use utils::SeqIterator;
 
 #[derive(Debug)]
 pub struct FileTemplate<'a> {

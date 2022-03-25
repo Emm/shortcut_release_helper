@@ -61,7 +61,6 @@ mod config;
 mod git;
 mod shortcut;
 mod template;
-mod template_utils;
 mod types;
 
 /// A command-line tool to generate release notes.
