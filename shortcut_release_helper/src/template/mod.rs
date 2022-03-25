@@ -5,10 +5,12 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use chrono::offset::Utc;
+use lazy_static::lazy_static;
 use minijinja::{
     value::{Value, ValueKind},
     Environment, ErrorKind, State,
 };
+use regex::{Captures, Regex};
 
 use crate::Release;
 use utils::SeqIterator;
@@ -32,10 +34,33 @@ impl<'a> FileTemplate<'a> {
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+        environment.add_filter("escape", Self::escape);
 
         environment.add_function("today", Self::today);
 
+        environment.set_auto_escape_callback(|_| minijinja::AutoEscape::None);
+
         Ok(Self { environment })
+    }
+
+    /// Escape Markdown characters - useful for epic and story titles
+    fn escape(_state: &State, v: Value) -> Result<Value, minijinja::Error> {
+        lazy_static! {
+            static ref MARKDOWN_ESCAPE_RE: Regex =
+                Regex::new(r##"([!"#$%&'()*+,-./:;<=>?@\[\]^_`{|}~\\])"##)
+                    .expect("Markdown escape regex does not compile");
+        };
+        let v = match v.kind() {
+            ValueKind::String => {
+                let string = v.as_str().expect("should be a string");
+                let escaped_string = MARKDOWN_ESCAPE_RE
+                    .replace_all(&string, |caps: &Captures| format!(r"\{}", &caps[1]))
+                    .to_string();
+                Value::from_safe_string(escaped_string)
+            }
+            _ => v,
+        };
+        Ok(v)
     }
 
     fn split_by_label<'s>(
