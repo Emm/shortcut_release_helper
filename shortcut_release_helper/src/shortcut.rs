@@ -40,15 +40,14 @@ pub fn parse_commits(commits: RepoToCommits) -> Result<Commits> {
             let maybe_story_id = commit
                 .message
                 .as_ref()
-                .map(|message| {
-                    SHORTCUT_RE.captures(&message).map(|captures| {
+                .and_then(|message| {
+                    SHORTCUT_RE.captures(message).map(|captures| {
                         captures
                             .get(1)
                             .expect("Story id should be captured")
                             .as_str()
                     })
                 })
-                .flatten()
                 .map(|story_id| StoryId::from_str(story_id).expect("Should be parsed as number"));
             if let Some(story_id) = maybe_story_id {
                 story_commits

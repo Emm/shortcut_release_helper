@@ -51,7 +51,6 @@ use serde::Serialize;
 use shortcut::ReleaseContent;
 use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
-use tracing_subscriber;
 use types::RepoToCommits;
 
 use crate::types::{RepositoryConfiguration, RepositoryName, UnreleasedCommit};
@@ -92,7 +91,7 @@ fn find_unreleased_commits(
     debug!("Initializing repository");
     let repo = {
         let now = Instant::now();
-        let repo = Repository::new(&repo_config)?;
+        let repo = Repository::new(repo_config)?;
         debug!(
             "Initialization done in {time}ms",
             time = now.elapsed().as_millis()
@@ -157,7 +156,7 @@ async fn main() -> Result<()> {
         config.repositories.into_iter().map(|(name, repo_config)| {
             tokio::task::spawn_blocking::<_, Result<_>>(move || {
                 let commits = find_unreleased_commits(&name, &repo_config)?;
-                Ok((name.clone(), commits))
+                Ok((name, commits))
             })
         }),
     )

@@ -27,8 +27,8 @@ impl<'a> Repository<'a> {
     }
 
     pub fn find_unreleased_commits(&self) -> Result<Vec<UnreleasedCommit>> {
-        let release_commit = self.find_commit_id(&self.release_branch)?;
-        let next_commit = self.find_commit_id(&self.next_branch)?;
+        let release_commit = self.find_commit_id(self.release_branch)?;
+        let next_commit = self.find_commit_id(self.next_branch)?;
 
         debug!("Next commit {:?}", next_commit.id());
         debug!("Finding merge base");
@@ -37,11 +37,7 @@ impl<'a> Repository<'a> {
             .merge_base(release_commit.id(), next_commit.id())?;
         debug!("Merge base {:?}", commit = merge_base);
         let mut rev_walk = self.repository.revwalk()?;
-        let range = format!(
-            "{}..{}",
-            merge_base.to_string(),
-            next_commit.id().to_string()
-        );
+        let range = format!("{}..{}", merge_base, next_commit.id());
         rev_walk.push_range(&range)?;
         let commits = rev_walk
             .inspect(|commit_id| debug!(ancestor_id = ?commit_id))

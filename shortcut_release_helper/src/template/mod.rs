@@ -1,7 +1,6 @@
 mod utils;
 
-use std::fs;
-use std::path::PathBuf;
+use std::{fs, path::Path};
 
 use anyhow::Result;
 use chrono::offset::Utc;
@@ -20,7 +19,7 @@ pub struct FileTemplate<'a> {
     environment: Environment<'a>,
 }
 
-const TEMPLATE_NAME: &'static str = "main";
+const TEMPLATE_NAME: &str = "main";
 
 impl<'a> FileTemplate<'a> {
     pub fn new(template_content: &'a str) -> Result<Self> {
@@ -55,7 +54,7 @@ impl<'a> FileTemplate<'a> {
             ValueKind::String => {
                 let string = v.as_str().expect("should be a string");
                 let escaped_string = MARKDOWN_ESCAPE_RE
-                    .replace_all(&string, |caps: &Captures| format!(r"\{}", &caps[1]))
+                    .replace_all(string, |caps: &Captures| format!(r"\{}", &caps[1]))
                     .to_string();
                 Value::from_safe_string(escaped_string)
             }
@@ -68,9 +67,9 @@ impl<'a> FileTemplate<'a> {
     /// spaces indicated.
     fn indent(_state: &State, v: Value, amount: Value) -> Result<Value, minijinja::Error> {
         #[cfg(windows)]
-        const LINE_ENDING: &'static str = "\r\n";
+        const LINE_ENDING: &str = "\r\n";
         #[cfg(not(windows))]
-        const LINE_ENDING: &'static str = "\n";
+        const LINE_ENDING: &str = "\n";
 
         let v = if matches!(v.kind(), ValueKind::String) {
             v.as_str().expect("Should be a string")
@@ -99,11 +98,7 @@ impl<'a> FileTemplate<'a> {
         Ok(Value::from(v))
     }
 
-    fn split_by_label<'s>(
-        _state: &State,
-        v: Value,
-        label: Value,
-    ) -> Result<Value, minijinja::Error> {
+    fn split_by_label(_state: &State, v: Value, label: Value) -> Result<Value, minijinja::Error> {
         let label_name = if matches!(label.kind(), ValueKind::String) {
             label.as_str().expect("Should be a string")
         } else {
@@ -131,10 +126,7 @@ impl<'a> FileTemplate<'a> {
         Ok(Value::from(vec![matched, unmatched]))
     }
 
-    fn split_by_epic_stories_state<'s>(
-        _state: &State,
-        v: Value,
-    ) -> Result<Value, minijinja::Error> {
+    fn split_by_epic_stories_state(_state: &State, v: Value) -> Result<Value, minijinja::Error> {
         let (mut matched, mut unmatched) = (Vec::new(), Vec::new());
         let epics_iter = SeqIterator::new(v)?;
         for epic in epics_iter {
@@ -152,11 +144,7 @@ impl<'a> FileTemplate<'a> {
         Ok(Value::from(vec![matched, unmatched]))
     }
 
-    fn split_by_epic<'s>(
-        _state: &State,
-        v: Value,
-        epic_id: Value,
-    ) -> Result<Value, minijinja::Error> {
+    fn split_by_epic(_state: &State, v: Value, epic_id: Value) -> Result<Value, minijinja::Error> {
         if !matches!(epic_id.kind(), ValueKind::Number) {
             return Err(minijinja::Error::new(
                 ErrorKind::ImpossibleOperation,
@@ -177,7 +165,7 @@ impl<'a> FileTemplate<'a> {
 
     /// Helper returning today's date, formatted according to a format string following
     /// [`chrono::format::strftime`] (if present), otherwise defaults to `YYYY-MM-DD`.
-    fn today<'s>(_state: &State, fmt: Option<String>) -> Result<Value, minijinja::Error> {
+    fn today(_state: &State, fmt: Option<String>) -> Result<Value, minijinja::Error> {
         Ok(Value::from_safe_string(
             Utc::today()
                 .format(fmt.as_deref().unwrap_or("%F"))
@@ -185,7 +173,7 @@ impl<'a> FileTemplate<'a> {
         ))
     }
 
-    pub fn render_to_file(&self, release: &Release, output_file: &PathBuf) -> Result<()> {
+    pub fn render_to_file(&self, release: &Release, output_file: &Path) -> Result<()> {
         let template = self.environment.get_template(TEMPLATE_NAME)?;
         let file_content = template.render(&release)?;
         fs::write(output_file, &file_content)?;
