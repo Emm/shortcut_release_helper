@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 shortcut_client = { path = "../shortcut_client" }
 ansi_term = "0.12"
-anyhow = "1"
+anyhow = { version = "1", features = ["backtrace"] }
 chrono = "0.4"
 clap = { version = "3", features = ["derive"] }
 derive_more = "0.99"
