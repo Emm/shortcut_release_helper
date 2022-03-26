@@ -38,6 +38,7 @@ impl<'a> FileTemplate<'a> {
         environment.add_filter("escape", Self::escape);
 
         environment.add_function("today", Self::today);
+        environment.add_function("epic_emoji", Self::epic_emoji);
 
         environment.set_auto_escape_callback(|_| minijinja::AutoEscape::None);
 
@@ -215,6 +216,11 @@ impl<'a> FileTemplate<'a> {
                 .format(fmt.as_deref().unwrap_or("%F"))
                 .to_string(),
         ))
+    }
+
+    fn epic_emoji(_state: &State) -> Result<Value, minijinja::Error> {
+        const EPIC_EMOJI: &str = ":checkered_flag:";
+        Ok(Value::from_safe_string(EPIC_EMOJI.to_string()))
     }
 
     pub fn render_to_file(&self, release: &Release, output_file: &Path) -> Result<()> {
