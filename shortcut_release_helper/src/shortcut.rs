@@ -2,9 +2,9 @@ use std::collections::HashSet;
 use std::num::NonZeroU32;
 use std::{collections::HashMap, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use futures::stream::FuturesUnordered;
-use futures::{Future, StreamExt};
+use futures::{Future, StreamExt, TryFutureExt};
 use governor::clock::QuantaClock;
 use governor::state::direct::StreamRateLimitExt;
 use governor::state::InMemoryState;
@@ -127,10 +127,12 @@ impl ShortcutClient {
     }
 
     async fn get_stories(&self, commits: &Commits) -> Result<Vec<Story>> {
-        let mut stories = self
+        let mut stories: Vec<Story> = self
             .get_shortcut_data(commits.story_commits.keys().map(|story_id| {
                 let story_id: &u32 = story_id.as_ref();
-                shortcut_api::get_story(&self.configuration, *story_id as i64)
+                shortcut_api::get_story(&self.configuration, *story_id as i64).map_err(move |err| {
+                    anyhow!("Error while retrieving story {}: {:?}", story_id, err)
+                })
             }))
             .await?;
         stories.sort_by_key(|story| story.id);
@@ -142,11 +144,11 @@ impl ShortcutClient {
             .filter_map(|story| story.epic_id)
             .collect::<HashSet<_>>();
         let mut epics = self
-            .get_shortcut_data(
-                epic_ids
-                    .into_iter()
-                    .map(|epic_id| shortcut_api::get_epic(&self.configuration, epic_id)),
-            )
+            .get_shortcut_data(epic_ids.into_iter().map(|epic_id| {
+                shortcut_api::get_epic(&self.configuration, epic_id).map_err(move |err| {
+                    anyhow!("Error while retrieving epic {}: {:?}", epic_id, err)
+                })
+            }))
             .await?;
         epics.sort_by_key(|epic| epic.id);
         Ok(epics)
