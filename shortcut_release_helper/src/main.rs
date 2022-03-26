@@ -49,14 +49,14 @@ use ansi_term::{
     Colour::{Blue, Green, Red},
     Style,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use git::Repository;
 use serde::Serialize;
 use shortcut::{ReleaseContent, StoryId};
 use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
-use types::RepoToCommits;
+use types::{RepoToCommit, RepoToCommits};
 
 use crate::types::{RepositoryConfiguration, RepositoryName, UnreleasedCommit};
 use crate::{config::AppConfig, shortcut::parse_commits, shortcut::ShortcutClient};
@@ -151,6 +151,7 @@ pub struct Release<'a> {
     pub stories: Vec<Story>,
     pub epics: Vec<Epic>,
     pub unparsed_commits: RepoToCommits,
+    pub heads: RepoToCommit,
 }
 
 #[tokio::main]
@@ -169,6 +170,15 @@ async fn main() -> Result<()> {
         }),
     )
     .await?;
+    let heads = repo_names_and_commits
+        .iter()
+        .map(|repo_name_and_commit| {
+            let (repo_name, commits) = repo_name_and_commit
+                .as_ref()
+                .map_err(|err| anyhow!("{:?}", err))?;
+            Ok((repo_name.clone(), commits[0].clone()))
+        })
+        .collect::<Result<HashMap<_, _>>>()?;
     let repo_names_and_commits = repo_names_and_commits
         .into_iter()
         .collect::<Result<HashMap<_, _>>>()?;
@@ -185,6 +195,7 @@ async fn main() -> Result<()> {
         stories: release_content.stories,
         epics: release_content.epics,
         unparsed_commits: release_content.unparsed_commits,
+        heads,
     };
     template.render_to_file(&release, &args.output_file)?;
     Ok(())

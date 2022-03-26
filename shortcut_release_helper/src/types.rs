@@ -49,3 +49,6 @@ pub struct UnreleasedCommit {
 
 /// A repository name -> unreleased commits mapping
 pub type RepoToCommits = HashMap<RepositoryName, Vec<UnreleasedCommit>>;
+
+/// A repository name -> unreleased commit mapping
+pub type RepoToCommit = HashMap<RepositoryName, UnreleasedCommit>;
