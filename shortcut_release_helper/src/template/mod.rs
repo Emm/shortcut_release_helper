@@ -144,17 +144,29 @@ impl<'a> FileTemplate<'a> {
         Ok(Value::from(vec![matched, unmatched]))
     }
 
-    fn split_by_epic(_state: &State, v: Value, epic_id: Value) -> Result<Value, minijinja::Error> {
-        if !matches!(epic_id.kind(), ValueKind::Number) {
-            return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
-                "expected a number",
-            ));
+    fn split_by_epic(
+        _state: &State,
+        v: Value,
+        epic_id: Option<Value>,
+    ) -> Result<Value, minijinja::Error> {
+        if let Some(epic_id) = epic_id.as_ref() {
+            if !matches!(epic_id.kind(), ValueKind::Number) {
+                return Err(minijinja::Error::new(
+                    ErrorKind::ImpossibleOperation,
+                    "expected a number",
+                ));
+            }
         };
         let (mut matched, mut unmatched) = (Vec::new(), Vec::new());
         let stories_iter = SeqIterator::new(v)?;
         for story in stories_iter {
-            if story.get_attr("epic_id")? == epic_id {
+            let story_epic_id = story.get_attr("epic_id")?;
+            let is_matched = if let Some(epic_id) = epic_id.as_ref() {
+                *epic_id == story_epic_id
+            } else {
+                matches!(story_epic_id.kind(), ValueKind::Number)
+            };
+            if is_matched {
                 matched.push(story)
             } else {
                 unmatched.push(story)
