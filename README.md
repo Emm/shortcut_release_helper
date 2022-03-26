@@ -1,6 +1,6 @@
 # Shortcut release helper
 
-This is a command-line tool to retrieve the list of stories which will be deployed in a release
+This is a command-line tool to retrieve the list of stories from the [Shortcut](https://app.shortcut.com/) issue tracker which will be deployed in a release
 
 # Development
 
