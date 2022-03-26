@@ -33,6 +33,7 @@ impl<'a> FileTemplate<'a> {
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+        environment.add_filter("story_emoji", Self::story_emoji);
         environment.add_filter("indent", Self::indent);
         environment.add_filter("escape", Self::escape);
 
@@ -173,6 +174,37 @@ impl<'a> FileTemplate<'a> {
             };
         }
         Ok(Value::from(vec![matched, unmatched]))
+    }
+
+    fn story_emoji(_state: &State, story: Value) -> Result<Value, minijinja::Error> {
+        if !matches!(story.kind(), ValueKind::Map) {
+            return Err(minijinja::Error::new(
+                ErrorKind::ImpossibleOperation,
+                "expected an object",
+            ));
+        }
+        const FEATURE_EMOJI: &str = ":sunny:";
+        const CHORE_EMOJI: &str = ":wrench:";
+        const BUG_EMOJI: &str = ":lady_beetle:";
+        if let Some(story_type) = story.get_attr("story_type")?.as_str() {
+            let emoji = match story_type {
+                "feature" => FEATURE_EMOJI,
+                "chore" => CHORE_EMOJI,
+                "bug" => BUG_EMOJI,
+                other => {
+                    return Err(minijinja::Error::new(
+                        ErrorKind::ImpossibleOperation,
+                        format!("Unknown story_type {}", other),
+                    ))
+                }
+            };
+            Ok(Value::from_safe_string(emoji.to_string()))
+        } else {
+            Err(minijinja::Error::new(
+                ErrorKind::ImpossibleOperation,
+                "no story_type attribute",
+            ))
+        }
     }
 
     /// Helper returning today's date, formatted according to a format string following
