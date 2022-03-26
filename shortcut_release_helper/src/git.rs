@@ -6,6 +6,7 @@ use git2::{
     Commit as GitCommit, ErrorClass as GitErrorClass, ErrorCode as GitErrorCode, Oid as GitOid,
     Repository as GitRepository,
 };
+use itertools::Itertools;
 use tracing::debug;
 
 use crate::types::{RepositoryConfiguration, RepositoryReference, UnreleasedCommit};
@@ -42,15 +43,18 @@ impl<'a> Repository<'a> {
         let commits = rev_walk
             .inspect(|commit_id| debug!(ancestor_id = ?commit_id))
             .map(|commit_id| match commit_id {
-                Ok(commit_id) => Ok(UnreleasedCommit {
-                    id: commit_id,
-                    message: self
-                        .repository
-                        .find_commit(commit_id)?
-                        .message()
-                        .map(|msg| msg.to_owned()),
-                }),
+                Ok(commit_id) => self.repository.find_commit(commit_id),
                 Err(e) => Err(e),
+            })
+            .filter_map_ok(|commit| {
+                if commit.parent_count() < 2 {
+                    Some(UnreleasedCommit {
+                        id: commit.id(),
+                        message: commit.message().map(|msg| msg.to_owned()),
+                    })
+                } else {
+                    None
+                }
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(commits)
