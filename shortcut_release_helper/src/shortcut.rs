@@ -28,7 +28,10 @@ pub struct Commits {
 }
 
 /// not linked to a story.
-pub fn parse_commits(commits: RepoToCommits) -> Result<Commits> {
+pub fn parse_commits(
+    commits: RepoToCommits,
+    exclude_story_ids: &HashSet<StoryId>,
+) -> Result<Commits> {
     lazy_static! {
         static ref SHORTCUT_RE: Regex =
             Regex::new(r"^\[(?:sc-|ch)(\d+)\]").expect("Could not compile SHORTCUT_RE");
@@ -50,12 +53,14 @@ pub fn parse_commits(commits: RepoToCommits) -> Result<Commits> {
                 })
                 .map(|story_id| StoryId::from_str(story_id).expect("Should be parsed as number"));
             if let Some(story_id) = maybe_story_id {
-                story_commits
-                    .entry(story_id)
-                    .or_default()
-                    .entry(repo_name.clone())
-                    .or_default()
-                    .push(commit);
+                if !exclude_story_ids.contains(&story_id) {
+                    story_commits
+                        .entry(story_id)
+                        .or_default()
+                        .entry(repo_name.clone())
+                        .or_default()
+                        .push(commit);
+                }
             } else {
                 unparsed_commits
                     .entry(repo_name.clone())

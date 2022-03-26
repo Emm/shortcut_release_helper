@@ -38,7 +38,12 @@
 #[macro_use]
 extern crate derive_more;
 
-use std::{collections::HashMap, fs, path::PathBuf, time::Instant};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    path::PathBuf,
+    time::Instant,
+};
 
 use ansi_term::{
     Colour::{Blue, Green, Red},
@@ -48,7 +53,7 @@ use anyhow::Result;
 use clap::Parser;
 use git::Repository;
 use serde::Serialize;
-use shortcut::ReleaseContent;
+use shortcut::{ReleaseContent, StoryId};
 use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
 use types::RepoToCommits;
@@ -77,6 +82,9 @@ struct Args {
     /// Description of the release
     #[clap(long)]
     description: Option<String>,
+    /// Id of story to exclude, can be used multiple times
+    #[clap(long)]
+    exclude_story_id: Vec<StoryId>,
 }
 
 #[tracing::instrument(level = "info", skip_all, fields(repo = %repo_name))]
@@ -164,7 +172,8 @@ async fn main() -> Result<()> {
     let repo_names_and_commits = repo_names_and_commits
         .into_iter()
         .collect::<Result<HashMap<_, _>>>()?;
-    let parsed_commits = parse_commits(repo_names_and_commits)?;
+    let exclude_story_ids = HashSet::from_iter(args.exclude_story_id.iter().copied());
+    let parsed_commits = parse_commits(repo_names_and_commits, &exclude_story_ids)?;
     debug!("Got result {:?}", parsed_commits);
     let shortcut_client = ShortcutClient::new(&config.api_key);
     let release_content = shortcut_client.get_release(parsed_commits).await?;
