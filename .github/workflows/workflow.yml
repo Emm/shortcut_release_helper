@@ -1,0 +1,40 @@
+name: Main workflow
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: short
+  RUSTFLAGS: "-D warnings"
+  RUSTUP_MAX_RETRIES: 10
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build | checkout
+        uses: actions/checkout@v2
+
+      - name: Build | setup
+        uses: ./.github/actions/setup
+    
+      - name: Build | clippy
+        uses: actions-rs/cargo@v1.0.3
+        with:
+            command: clippy
+            args: --workspace --exclude shortcut_client --no-deps --locked --all-targets --all-features -- -D clippy::all
+
+      - name: Build
+        uses: actions-rs/cargo@v1.0.3
+        with:
+            command: build

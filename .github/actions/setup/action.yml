@@ -1,0 +1,34 @@
+runs:
+  using: composite
+  steps:
+    - name: Setup | Rust
+      uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: clippy
+
+    - name: Setup | apt-get update
+      run: sudo apt-get update
+      shell: bash
+
+    - name: Setup | add jq
+      run: sudo apt-get -y install jq
+      shell: bash
+
+    - name: Setup | add JRE
+      run: sudo apt-get install -y default-jre-headless
+      shell: bash
+
+    - name: Setup | add yarn
+      run: sudo apt-get install -y yarnpkg
+      shell: bash
+
+    - name: Setup | add OpenAPI Generator
+      run: yarn global add @openapitools/openapi-generator-cli
+      shell: bash
+
+    - name: Setup | build Shortcut client
+      run: ./bin/generate_openapi_client.sh
+      shell: bash
