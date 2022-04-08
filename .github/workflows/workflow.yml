@@ -28,12 +28,6 @@ jobs:
       - name: Build | setup
         uses: ./.github/actions/setup
     
-      - name: Build | clippy
-        uses: actions-rs/cargo@v1.0.3
-        with:
-            command: clippy
-            args: --workspace --exclude shortcut_client --no-deps --locked --all-targets --all-features -- -D clippy::all
-
       - name: Build
         uses: actions-rs/cargo@v1.0.3
         with:
