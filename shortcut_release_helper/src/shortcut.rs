@@ -117,8 +117,23 @@ impl ShortcutClient {
         Ok(items)
     }
 
-    pub async fn get_release(&self, commits: Commits) -> Result<ReleaseContent> {
-        let stories = self.get_stories(&commits).await?;
+    pub async fn get_release(
+        &self,
+        commits: Commits,
+        exclude_story_labels: &HashSet<&String>,
+    ) -> Result<ReleaseContent> {
+        let mut stories = self.get_stories(&commits).await?;
+        if !exclude_story_labels.is_empty() {
+            stories = stories
+                .into_iter()
+                .filter(|story| {
+                    !story
+                        .labels
+                        .iter()
+                        .any(|label| exclude_story_labels.contains(&label.name))
+                })
+                .collect();
+        }
         let epics = self.get_epics(stories.iter()).await?;
         let Commits {
             unparsed_commits, ..

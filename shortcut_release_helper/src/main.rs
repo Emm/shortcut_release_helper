@@ -85,6 +85,9 @@ struct Args {
     /// Id of story to exclude, can be used multiple times
     #[clap(long)]
     exclude_story_id: Vec<StoryId>,
+    /// Label of story to exclude, can be used multiple times
+    #[clap(long)]
+    exclude_story_label: Vec<String>,
 }
 
 #[tracing::instrument(level = "info", skip_all, fields(repo = %repo_name))]
@@ -186,7 +189,10 @@ async fn main() -> Result<()> {
     let parsed_commits = parse_commits(repo_names_and_commits, &exclude_story_ids)?;
     debug!("Got result {:?}", parsed_commits);
     let shortcut_client = ShortcutClient::new(&config.api_key);
-    let release_content = shortcut_client.get_release(parsed_commits).await?;
+    let exclude_story_labels = HashSet::from_iter(args.exclude_story_label.iter());
+    let release_content = shortcut_client
+        .get_release(parsed_commits, &exclude_story_labels)
+        .await?;
     print_summary(&release_content);
     let release = Release {
         name: args.name.as_deref(),
