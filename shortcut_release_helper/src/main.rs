@@ -51,14 +51,15 @@ use ansi_term::{
 };
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use git::Repository;
+use git::{Repository, UnreleasedCommits};
+use itertools::Itertools;
 use serde::Serialize;
 use shortcut::{ReleaseContent, StoryId};
 use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
-use types::{RepoToCommit, RepoToCommits};
+use types::{RepoToCommits, RepoToHeadCommit};
 
-use crate::types::{RepositoryConfiguration, RepositoryName, UnreleasedCommit};
+use crate::types::{RepositoryConfiguration, RepositoryName};
 use crate::{config::AppConfig, shortcut::parse_commits, shortcut::ShortcutClient};
 
 mod config;
@@ -94,7 +95,7 @@ struct Args {
 fn find_unreleased_commits(
     repo_name: &RepositoryName,
     repo_config: &RepositoryConfiguration,
-) -> Result<Vec<UnreleasedCommit>> {
+) -> Result<UnreleasedCommits> {
     info!(
         release_branch = %repo_config.release_branch,
         next_branch = %repo_config.next_branch
@@ -111,10 +112,10 @@ fn find_unreleased_commits(
     };
     let commits = {
         let now = Instant::now();
-        let commits = repo.find_unreleased_commits()?;
+        let commits = repo.find_unreleased_commits_and_head()?;
         info!(
             "Found {commit_count} unreleased commits in {time}ms",
-            commit_count = commits.len(),
+            commit_count = commits.unreleased_commits.len(),
             time = now.elapsed().as_millis()
         );
         commits
@@ -154,7 +155,7 @@ pub struct Release<'a> {
     pub stories: Vec<Story>,
     pub epics: Vec<Epic>,
     pub unparsed_commits: RepoToCommits,
-    pub heads: RepoToCommit,
+    pub next_heads: RepoToHeadCommit,
 }
 
 #[tokio::main]
@@ -164,26 +165,27 @@ async fn main() -> Result<()> {
     let config = AppConfig::parse(&PathBuf::from("config.toml"))?;
     let template_content = fs::read_to_string(&config.template_file)?;
     let template = template::FileTemplate::new(&template_content)?;
-    let repo_names_and_commits = futures::future::try_join_all(
+    let repo_names_and_heads_and_commits = futures::future::try_join_all(
         config.repositories.into_iter().map(|(name, repo_config)| {
             tokio::task::spawn_blocking::<_, Result<_>>(move || {
                 let commits = find_unreleased_commits(&name, &repo_config)?;
-                Ok((name, commits))
+                Ok((name, commits.next_head, commits.unreleased_commits))
             })
         }),
     )
     .await?;
-    let heads = repo_names_and_commits
+    let next_heads = repo_names_and_heads_and_commits
         .iter()
-        .map(|repo_name_and_commit| {
-            let (repo_name, commits) = repo_name_and_commit
+        .map(|repo_name_and_head_and_commit| {
+            let (repo_name, next_head, _commits) = repo_name_and_head_and_commit
                 .as_ref()
                 .map_err(|err| anyhow!("{:?}", err))?;
-            Ok((repo_name.clone(), commits[0].clone()))
+            Ok((repo_name.clone(), next_head.clone()))
         })
         .collect::<Result<HashMap<_, _>>>()?;
-    let repo_names_and_commits = repo_names_and_commits
+    let repo_names_and_commits = repo_names_and_heads_and_commits
         .into_iter()
+        .map_ok(|(repo_name, _next_head, commits)| (repo_name, commits))
         .collect::<Result<HashMap<_, _>>>()?;
     let exclude_story_ids = HashSet::from_iter(args.exclude_story_id.iter().copied());
     let parsed_commits = parse_commits(repo_names_and_commits, &exclude_story_ids)?;
@@ -201,7 +203,7 @@ async fn main() -> Result<()> {
         stories: release_content.stories,
         epics: release_content.epics,
         unparsed_commits: release_content.unparsed_commits,
-        heads,
+        next_heads,
     };
     template.render_to_file(&release, &args.output_file)?;
     Ok(())

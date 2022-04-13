@@ -9,12 +9,17 @@ use git2::{
 use itertools::Itertools;
 use tracing::debug;
 
-use crate::types::{RepositoryConfiguration, RepositoryReference, UnreleasedCommit};
+use crate::types::{HeadCommit, RepositoryConfiguration, RepositoryReference, UnreleasedCommit};
 
 pub struct Repository<'a> {
     repository: GitRepository,
     release_branch: &'a RepositoryReference,
     next_branch: &'a RepositoryReference,
+}
+
+pub struct UnreleasedCommits {
+    pub next_head: HeadCommit,
+    pub unreleased_commits: Vec<UnreleasedCommit>,
 }
 
 impl<'a> Repository<'a> {
@@ -27,20 +32,22 @@ impl<'a> Repository<'a> {
         })
     }
 
-    pub fn find_unreleased_commits(&self) -> Result<Vec<UnreleasedCommit>> {
-        let release_commit = self.find_commit_id(self.release_branch)?;
-        let next_commit = self.find_commit_id(self.next_branch)?;
+    /// Return the list of commits present in the next branch but not the release branch, as well
+    /// as the head commit of the next branch
+    pub fn find_unreleased_commits_and_head(&'a self) -> Result<UnreleasedCommits> {
+        let release_head = self.find_commit(self.release_branch)?;
+        let next_head = self.find_commit(self.next_branch)?;
 
-        debug!("Next commit {:?}", next_commit.id());
+        debug!("Next commit {:?}", next_head.id());
         debug!("Finding merge base");
         let merge_base = self
             .repository
-            .merge_base(release_commit.id(), next_commit.id())?;
+            .merge_base(release_head.id(), next_head.id())?;
         debug!("Merge base {:?}", commit = merge_base);
         let mut rev_walk = self.repository.revwalk()?;
-        let range = format!("{}..{}", merge_base, next_commit.id());
+        let range = format!("{}..{}", merge_base, next_head.id());
         rev_walk.push_range(&range)?;
-        let commits = rev_walk
+        let unreleased_commits = rev_walk
             .inspect(|commit_id| debug!(ancestor_id = ?commit_id))
             .map(|commit_id| match commit_id {
                 Ok(commit_id) => self.repository.find_commit(commit_id),
@@ -57,10 +64,16 @@ impl<'a> Repository<'a> {
                 }
             })
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(commits)
+        Ok(UnreleasedCommits {
+            next_head: HeadCommit {
+                id: next_head.id(),
+                message: next_head.message().map(|msg| msg.to_owned()),
+            },
+            unreleased_commits,
+        })
     }
 
-    fn find_commit_id(&'a self, branch: &RepositoryReference) -> Result<GitCommit<'a>> {
+    fn find_commit(&'a self, branch: &RepositoryReference) -> Result<GitCommit<'a>> {
         let maybe_reference = self
             .repository
             .resolve_reference_from_short_name(&*branch.as_ref())

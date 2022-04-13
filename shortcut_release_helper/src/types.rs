@@ -39,6 +39,14 @@ fn serialize_oid<S: Serializer>(oid: &GitOid, serializer: S) -> Result<S::Ok, S:
     serializer.serialize_str(&oid.to_string())
 }
 
+/// Head commit of a branch. May or may not have been released
+#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+pub struct HeadCommit {
+    #[serde(serialize_with = "serialize_oid")]
+    pub id: GitOid,
+    pub message: Option<String>,
+}
+
 /// Commit only present in `next_branch`.
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct UnreleasedCommit {
@@ -50,5 +58,5 @@ pub struct UnreleasedCommit {
 /// A repository name -> unreleased commits mapping
 pub type RepoToCommits = HashMap<RepositoryName, Vec<UnreleasedCommit>>;
 
-/// A repository name -> unreleased commit mapping
-pub type RepoToCommit = HashMap<RepositoryName, UnreleasedCommit>;
+/// A repository name -> head of the next branch mapping
+pub type RepoToHeadCommit = HashMap<RepositoryName, HeadCommit>;

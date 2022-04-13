@@ -64,7 +64,7 @@ The template receives the following data:
 | `stories` | `list` of [Shortcut stories](https://shortcut.com/api/rest/v3#Body-Parameters-37290) | the list of all stories which been worked in the release |
 | `epics` | `list` of [Shortcut epics](https://shortcut.com/api/rest/v3#Get-Epic) | the list of all Shortcut epics containing at least one of the `stories` above (note that the epic's `stats` field relates to all the stories in the epic, not just the ones missing from the "release" branch) |
 | `unparsed_commits` | `map` `string` -> `list` of [commits](https://docs.rs/git2/latest/git2/struct.Commit.html) | a map of repo name to a list of commits with a commit message **not** starting with a valid Shortcut issue number |
-| `heads` | `map` `string` -> [commit](https://docs.rs/git2/latest/git2/struct.Commit.html) | a map of repo name to the head commit of the release branch of each repository |
+| `next_heads` | `map` `string` -> [commit](https://docs.rs/git2/latest/git2/struct.Commit.html) | a map of repo name to the head commit of the `next` branch of each repository |
 
 
 ### Helpers
