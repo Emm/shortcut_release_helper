@@ -28,7 +28,12 @@ jobs:
       - name: Build | setup
         uses: ./.github/actions/setup
     
+      - uses: actions-rs/cargo@v1
+        with:
+            command: fmt
+            args: -p shortcut_release_helper -- --check
+
       - name: Build
-        uses: actions-rs/cargo@v1.0.3
+        uses: actions-rs/cargo@v1
         with:
             command: build
