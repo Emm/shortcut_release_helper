@@ -4,10 +4,12 @@ on:
     paths-ignore:
       - "docs/**"
       - "**.md"
+      - "shortcut_release_helper/LICENSE"
   pull_request:
     paths-ignore:
       - "docs/**"
       - "**.md"
+      - "shortcut_release_helper/LICENSE"
 
 env:
   CARGO_INCREMENTAL: 0
