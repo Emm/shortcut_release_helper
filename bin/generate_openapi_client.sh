@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
-set pipefail
+set -o pipefail
 
 SHORTCUT_OPENAPI_SPEC_URL='https://shortcut.com/api/rest/v3/shortcut.swagger.json'
 OUTPUT_DIR="$(dirname $0)/../shortcut_client"
