@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
+set -o pipefail
 
 # Cleanup the generated code to ensure it compiles
 
