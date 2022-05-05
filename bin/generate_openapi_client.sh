@@ -11,8 +11,10 @@ CRATE_VERSION="3.0.0"
 
 TEMPFILE=$(mktemp --suffix .json)
 
+# Fix the PullRequestLabel id type, which is incorrect
+# Remove the /api/v3/files endpoint, open API generator doesn't seem to handle form data
 curl "$SHORTCUT_OPENAPI_SPEC_URL" | \
-    jq '.definitions.PullRequestLabel.properties.id.type = "string" | del(.definitions.PullRequestLabel.properties.id.format)' \
+    jq '.definitions.PullRequestLabel.properties.id.type = "string" | del(.definitions.PullRequestLabel.properties.id.format) | del(.paths["/api/v3/files"])' \
     > "$TEMPFILE"
 
 openapi-generator-cli generate \
