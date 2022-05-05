@@ -22,13 +22,14 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Build | checkout
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build | setup
+      - name: Setup Shortcut client
         uses: ./.github/actions/setup
     
-      - uses: actions-rs/cargo@v1
+      - name: Formatting check
+        uses: actions-rs/cargo@v1
         with:
             command: fmt
             args: -p shortcut_release_helper -- --check
