@@ -86,46 +86,12 @@ jobs:
             cp "target/${{ matrix.target }}/release/shortcut_release_helper" "dist/shortcut_release_helper-${{ matrix.target}}"
           fi
           mv README.md shortcut_release_helper/LICENSE "dist/shortcut_release_helper-${{ matrix.target}}"
-      - shell: bash
-        if: matrix.build == 'x86_64-linux'
-        run: tree
-      - uses: actions/upload-artifact@v3
-        with:
-          name: binary
-          path: dist
-          retention-days: 1
-          if-no-files-found: error
-  publish:
-    name: Publish
-    needs: [build_release]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - uses: actions/download-artifact@v3
-        with:
-          name: binary
-          path: dist
-
-      - shell: bash
-        run: tree
-
-      - name: Calculate tag name
-        run: |
-          name=dev
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            name=${GITHUB_REF:10}
-          fi
-          echo ::set-output name=val::$name
-          echo TAG=$name >> $GITHUB_ENV
-        id: tagname
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*
-          file_glob: true
-          tag: ${{ steps.tagname.outputs.val }}
+          file: "dist/shortcut_release_helper-${{ matrix.target }}"
+          asset_name: "shortcut_release_helper-${{ matrix.target }}"
+          tag: ${{ github.ref }}
           overwrite: true
