@@ -59,8 +59,11 @@ use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
 use types::{RepoToCommits, RepoToHeadCommit};
 
-use crate::types::{RepositoryConfiguration, RepositoryName};
 use crate::{config::AppConfig, shortcut::parse_commits, shortcut::ShortcutClient};
+use crate::{
+    shortcut::StoryLabelFilter,
+    types::{RepositoryConfiguration, RepositoryName},
+};
 
 mod config;
 mod git;
@@ -86,9 +89,13 @@ struct Args {
     /// Id of story to exclude, can be used multiple times
     #[clap(long)]
     exclude_story_id: Vec<StoryId>,
-    /// Label of story to exclude, can be used multiple times
+    /// Label of story to exclude, can be used multiple times - has priority over
+    /// include-story-label if a story is tagged multiple times
     #[clap(long)]
     exclude_story_label: Vec<String>,
+    /// Label of story to include, can be used multiple times
+    #[clap(long)]
+    include_story_label: Vec<String>,
 }
 
 #[tracing::instrument(level = "info", skip_all, fields(repo = %repo_name))]
@@ -191,9 +198,11 @@ async fn main() -> Result<()> {
     let parsed_commits = parse_commits(repo_names_and_commits, &exclude_story_ids)?;
     debug!("Got result {:?}", parsed_commits);
     let shortcut_client = ShortcutClient::new(&config.api_key);
-    let exclude_story_labels = HashSet::from_iter(args.exclude_story_label.iter());
     let release_content = shortcut_client
-        .get_release(parsed_commits, &exclude_story_labels)
+        .get_release(
+            parsed_commits,
+            StoryLabelFilter::new(&args.exclude_story_label, &args.include_story_label),
+        )
         .await?;
     print_summary(&release_content);
     let release = Release {

@@ -27,6 +27,39 @@ pub struct Commits {
     unparsed_commits: RepoToCommits,
 }
 
+#[derive(Debug)]
+pub struct StoryLabelFilter<'a> {
+    excluded_labels: HashSet<&'a String>,
+    included_labels: HashSet<&'a String>,
+}
+
+impl<'a> StoryLabelFilter<'a> {
+    pub fn new(excluded_labels: &'a [String], included_labels: &'a [String]) -> Self {
+        Self {
+            excluded_labels: HashSet::from_iter(excluded_labels.iter()),
+            included_labels: HashSet::from_iter(included_labels.iter()),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.excluded_labels.is_empty() && self.included_labels.is_empty()
+    }
+
+    pub fn filter(&self, story: &Story) -> bool {
+        let mut included_labels_count = 0;
+        for label in &story.labels {
+            if self.excluded_labels.contains(&label.name) {
+                return false;
+            }
+            if self.included_labels.contains(&label.name) {
+                included_labels_count += 1;
+            }
+        }
+        // This assumes that story labels, as returned by the API, are unique
+        included_labels_count == self.included_labels.len()
+    }
+}
+
 /// not linked to a story.
 pub fn parse_commits(
     commits: RepoToCommits,
@@ -117,21 +150,16 @@ impl ShortcutClient {
         Ok(items)
     }
 
-    pub async fn get_release(
+    pub async fn get_release<'a>(
         &self,
         commits: Commits,
-        exclude_story_labels: &HashSet<&String>,
+        story_label_filter: StoryLabelFilter<'a>,
     ) -> Result<ReleaseContent> {
         let mut stories = self.get_stories(&commits).await?;
-        if !exclude_story_labels.is_empty() {
+        if !story_label_filter.is_empty() {
             stories = stories
                 .into_iter()
-                .filter(|story| {
-                    !story
-                        .labels
-                        .iter()
-                        .any(|label| exclude_story_labels.contains(&label.name))
-                })
+                .filter(|story| story_label_filter.filter(story))
                 .collect();
         }
         let epics = self.get_epics(stories.iter()).await?;
