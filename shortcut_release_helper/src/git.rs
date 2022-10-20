@@ -43,7 +43,7 @@ impl<'a> Repository<'a> {
         let merge_base = self
             .repository
             .merge_base(release_head.id(), next_head.id())?;
-        debug!("Merge base {:?}", commit = merge_base);
+        debug!("Merge base {:commit?}", commit = merge_base);
         let mut rev_walk = self.repository.revwalk()?;
         let range = format!("{}..{}", merge_base, next_head.id());
         rev_walk.push_range(&range)?;
