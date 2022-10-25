@@ -13,7 +13,7 @@ impl SeqIterator {
     pub fn new(seq: Value) -> Result<Self, minijinja::Error> {
         if !matches!(seq.kind(), ValueKind::Seq) {
             return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "expected a list",
             ));
         }

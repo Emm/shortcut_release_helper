@@ -77,7 +77,7 @@ impl<'a> FileTemplate<'a> {
             v.as_str().expect("Should be a string")
         } else {
             return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "expected a string",
             ));
         };
@@ -85,13 +85,13 @@ impl<'a> FileTemplate<'a> {
         let amount = if matches!(amount.kind(), ValueKind::Number) {
             amount.to_string().parse::<usize>().map_err(|err| {
                 minijinja::Error::new(
-                    ErrorKind::ImpossibleOperation,
+                    ErrorKind::InvalidOperation,
                     format!("could not parse number, got {:?}", err),
                 )
             })
         } else {
             Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "expected a number",
             ))
         }?;
@@ -105,7 +105,7 @@ impl<'a> FileTemplate<'a> {
             label.as_str().expect("Should be a string")
         } else {
             return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "expected a string",
             ));
         };
@@ -154,7 +154,7 @@ impl<'a> FileTemplate<'a> {
         if let Some(epic_id) = epic_id.as_ref() {
             if !matches!(epic_id.kind(), ValueKind::Number) {
                 return Err(minijinja::Error::new(
-                    ErrorKind::ImpossibleOperation,
+                    ErrorKind::InvalidOperation,
                     "expected a number",
                 ));
             }
@@ -180,7 +180,7 @@ impl<'a> FileTemplate<'a> {
     fn story_emoji(_state: &State, story: Value) -> Result<Value, minijinja::Error> {
         if !matches!(story.kind(), ValueKind::Map) {
             return Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "expected an object",
             ));
         }
@@ -194,7 +194,7 @@ impl<'a> FileTemplate<'a> {
                 "bug" => BUG_EMOJI,
                 other => {
                     return Err(minijinja::Error::new(
-                        ErrorKind::ImpossibleOperation,
+                        ErrorKind::InvalidOperation,
                         format!("Unknown story_type {}", other),
                     ))
                 }
@@ -202,7 +202,7 @@ impl<'a> FileTemplate<'a> {
             Ok(Value::from_safe_string(emoji.to_string()))
         } else {
             Err(minijinja::Error::new(
-                ErrorKind::ImpossibleOperation,
+                ErrorKind::InvalidOperation,
                 "no story_type attribute",
             ))
         }

@@ -11,19 +11,19 @@ shortcut_client = { path = "../shortcut_client" }
 ansi_term = "0.12"
 anyhow = { version = "1", features = ["backtrace"] }
 chrono = "0.4"
-clap = { version = "3", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
 derive_more = "0.99"
 futures = "0.3"
-git2 = "0.13"
-governor = "0.4"
+git2 = "0.15"
+governor = "0.5"
 itertools = "0.10"
-minijinja = "0.14"
+minijinja = "0.24"
 lazy_static = "1"
 pin-project = "1"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full", "tracing"] }
-toml = "0.4"
+toml = "0.5"
 tracing = "0.1"
-tracing-subscriber = "0.2"
+tracing-subscriber = "0.3"
