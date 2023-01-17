@@ -102,7 +102,7 @@ The Markdown template uses a subset of the Jinja 2 syntax, as implemented in the
 - [Open API generator](https://github.com/OpenAPITools/openapi-generator).
   This will be used to generate the Shortcut client, based on the OpenAPI
   definition available from the [Shortcut API documentation
-  site](https://shortcut.com/api/rest/v3). The project's generator script
+  site](https://developer.shortcut.com/api/rest/v3). The project's generator script
   expects an `openapi-generator-cli` in the `PATH`.
 - [curl](https://curl.se/), to download the Shortcut OpenAPI definition.
 - [jq](https://stedolan.github.io/jq/), to patch it.
