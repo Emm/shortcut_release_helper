@@ -20,6 +20,34 @@ belong to.
 
 Finally, a Markdown file is generated based on the retrieved data and a template.
 
+## Installation
+
+Ensure that the dependencies below (both utilities and libararies) are present in your system.
+
+### Utilities
+
+- [Open API generator](https://github.com/OpenAPITools/openapi-generator).
+  This will be used to generate the Shortcut client, based on the OpenAPI
+  definition available from the [Shortcut API documentation
+  site](https://developer.shortcut.com/api/rest/v3). The project's generator script
+  expects an `openapi-generator-cli` in the `PATH`.
+- [curl](https://curl.se/), to download the Shortcut OpenAPI definition.
+- [jq](https://stedolan.github.io/jq/), to patch it.
+- [git](https://git-scm.com/), obviously
+- [rustc](https://www.rust-lang.org/), at least 1.58.0
+
+### Libraries
+
+- [OpenSSL](https://www.openssl.org/)
+
+### Building
+
+Clone the repository.
+
+Generate the OpenAPI client via `./bin/generate_openapi_client.sh`.
+
+Build the application via `cargo build`
+
 # Usage
 
 ```bash
@@ -92,31 +120,3 @@ The template receives the following functions:
 ## Jinja syntax
 
 The Markdown template uses a subset of the Jinja 2 syntax, as implemented in the [minijinja](https://docs.rs/minijinja/latest/minijinja/) crate.
-
-# Development
-
-## Dependencies
-
-### Utilities
-
-- [Open API generator](https://github.com/OpenAPITools/openapi-generator).
-  This will be used to generate the Shortcut client, based on the OpenAPI
-  definition available from the [Shortcut API documentation
-  site](https://developer.shortcut.com/api/rest/v3). The project's generator script
-  expects an `openapi-generator-cli` in the `PATH`.
-- [curl](https://curl.se/), to download the Shortcut OpenAPI definition.
-- [jq](https://stedolan.github.io/jq/), to patch it.
-- [git](https://git-scm.com/), obviously
-- [rustc](https://www.rust-lang.org/), at least 1.58.0
-
-### Libraries
-
-- [OpenSSL](https://www.openssl.org/)
-
-## Building
-
-Clone the repository.
-
-Generate the OpenAPI client via `./bin/generate_openapi_client.sh`.
-
-Build the application via `cargo build`
