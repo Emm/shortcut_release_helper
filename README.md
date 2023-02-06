@@ -30,7 +30,8 @@ Ensure that the dependencies below (both utilities and libararies) are present i
   This will be used to generate the Shortcut client, based on the OpenAPI
   definition available from the [Shortcut API documentation
   site](https://developer.shortcut.com/api/rest/v3). The project's generator script
-  expects an `openapi-generator-cli` in the `PATH`.
+  expects an `openapi-generator-cli` in the `PATH` or in `node_modules` if you use
+  `npm install @openapitools/openapi-generator-cli`.
 - [curl](https://curl.se/), to download the Shortcut OpenAPI definition.
 - [jq](https://stedolan.github.io/jq/), to patch it.
 - [git](https://git-scm.com/), obviously
