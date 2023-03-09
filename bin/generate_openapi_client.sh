@@ -5,6 +5,7 @@ set -o pipefail
 
 SHORTCUT_OPENAPI_SPEC_URL='https://developer.shortcut.com/api/rest/v3/shortcut.swagger.json'
 OUTPUT_DIR="$(dirname "$0")/../shortcut_client"
+ROOT_DIR="$(realpath "$(dirname "$0")/..")"
 
 CRATE_NAME="shortcut_client"
 CRATE_VERSION="3.0.0"
@@ -22,10 +23,10 @@ if which openapi-generator-cli
 then
     echo "Found openapi-generator-cli in PATH: $(which openapi-generator-cli)"
     OPENAPI_GENERATOR_CLI=openapi-generator-cli
-elif [ -x node_modules/.bin/openapi-generator-cli ]
+elif [ -x "$ROOT_DIR/node_modules/.bin/openapi-generator-cli" ]
 then
-    echo "Found openapi-generator-cli in node_modules"
-    OPENAPI_GENERATOR_CLI=node_modules/.bin/openapi-generator-cli
+    echo "Found openapi-generator-cli in $ROOT_DIR/node_modules"
+    OPENAPI_GENERATOR_CLI="$ROOT_DIR/node_modules/.bin/openapi-generator-cli"
 else
     echo "Warning: did not find openapi-generator-cli in PATH nor in node_modules"
 fi
