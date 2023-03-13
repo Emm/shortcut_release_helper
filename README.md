@@ -20,6 +20,39 @@ belong to.
 
 Finally, a Markdown file is generated based on the retrieved data and a template.
 
+# Usage
+
+## Basic usage
+
+Per default, the helper only requires the path to the output file.
+
+```base
+./shortcut_release_helper release_notes.md
+```
+
+## Advanced options
+
+It also supports additional options:
+- `--version <VERSION>` is the version number of the release. This is the
+  content of the `version` variable in the template.
+- `--name <NAME>` is the name of the release. This is the content of the `name`
+  variable in the template.
+- `--description <DESCRIPTION>` is the description of the release. This is the
+  content of the `description` variable in the template.
+- `--exclude-story-id <STORY_ID>` is the ID of a story which should be ignored.
+  Commits with this story id will be ignored. This option can be used multiple
+  times to ignore multiple stories. Use the numeric id of the story (ie, use
+  `--exclude-story-id 130` and **not** `--exclude-story-id sc-130` or
+  `--exclude-story-id sc130`)
+- `--exclude-story-label <LABEL>` is a story label to ignore. All commits of
+  stories with this label will be ignored. This option can be used multiple
+  times. Has priority over `--include-story-label`.
+- `--include-story-label <LABEL>` is a story label to include. Only commits
+  of stories with this label will be taken into account. This option can be
+  used multiple times.
+- `--exclude-unparsed-commits` is a flag indicating that unparsed commits
+  should not be sent to the template (instead, an empty list will be used).
+
 ## Installation
 
 Ensure that the dependencies below (both utilities and libararies) are present in your system.
