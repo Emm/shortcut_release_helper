@@ -212,7 +212,7 @@ impl<'a> FileTemplate<'a> {
     /// [`chrono::format::strftime`] (if present), otherwise defaults to `YYYY-MM-DD`.
     fn today(_state: &State, fmt: Option<String>) -> Result<Value, minijinja::Error> {
         Ok(Value::from_safe_string(
-            Utc::today()
+            Utc::now()
                 .format(fmt.as_deref().unwrap_or("%F"))
                 .to_string(),
         ))
