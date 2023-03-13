@@ -96,6 +96,9 @@ struct Args {
     /// Label of story to include, can be used multiple times
     #[clap(long)]
     include_story_label: Vec<String>,
+    /// Exclude unparsed commits
+    #[clap(long)]
+    exclude_unparsed_commits: bool,
 }
 
 #[tracing::instrument(level = "info", skip_all, fields(repo = %repo_name))]
@@ -205,13 +208,16 @@ async fn main() -> Result<()> {
         )
         .await?;
     print_summary(&release_content);
+    let include_unparsed_commits = !args.exclude_unparsed_commits;
     let release = Release {
         name: args.name.as_deref(),
         version: args.version.as_deref(),
         description: args.description.as_deref(),
         stories: release_content.stories,
         epics: release_content.epics,
-        unparsed_commits: release_content.unparsed_commits,
+        unparsed_commits: include_unparsed_commits
+            .then_some(release_content.unparsed_commits)
+            .unwrap_or_default(),
         next_heads,
     };
     template.render_to_file(&release, &args.output_file)?;
