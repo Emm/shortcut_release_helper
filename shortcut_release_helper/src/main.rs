@@ -73,7 +73,7 @@ mod types;
 
 /// A command-line tool to generate release notes.
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, about, long_about = None, disable_version_flag = true)]
 struct Args {
     /// Output file for the release notes
     output_file: PathBuf,
