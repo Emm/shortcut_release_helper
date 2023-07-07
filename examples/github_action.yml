@@ -1,0 +1,96 @@
+name: 'release-notes-notification'
+
+on:
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 9 * * MON,WED,FRI'
+
+permissions: read-all
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  RELEASE_NOTES_EMAIL_FROM: ${{ vars.RELEASE_NOTES_EMAIL_FROM }}
+  RELEASE_NOTES_EMAIL_TO: ${{ vars.RELEASE_NOTES_EMAIL_TO }}
+  RELEASE_NOTES_EMAIL_SUBJECT: "Release Notes"
+
+  ## Using GMAIL smtp relay
+  MAIL_URL: smtp+starttls://${{env.MAIL_USERNAME}}:${{env.MAIL_PASSWORD}}@${{env.MAIL_SERVER}}:${{env.MAIL_SERVER_PORT}}
+  MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+  MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+  MAIL_SERVER: "smtp.gmail.com"
+  MAIL_SERVER_PORT: 465
+
+  SHORTCUT_TOKEN: ${{ secrets.SHORTCUT_TOKEN }}
+  SHORTCUT_RELEASE_HELPER_IMAGE: ghcr.io/<username>/<repo>/<image>:<tag>
+
+jobs:
+      release-notes:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v3
+
+        - uses: actions/checkout@v3
+          with:
+            path: src/repo_one
+            repository: <REPOSITORY ONE>
+            token: ${{ secrets.ACTION_PAT_TOKEN }}
+            fetch-depth: 0    # Needed to pull TAG history
+
+        - uses: actions/checkout@v3
+          with:
+            path: src/repo_two
+            repository: <REPOSITORY TWO>
+            token: ${{ secrets.ACTION_PAT_TOKEN }}
+            fetch-depth: 0    # Needed to pull TAG history
+
+        - name: Configure
+          run: |
+            echo "Coping Jinja template"
+            cp $GITHUB_WORKSPACE/notifications/template.md.jinja $GITHUB_WORKSPACE/src
+            
+            echo "Generating config.toml"
+            echo "api_key = '$SHORTCUT_TOKEN'" > $GITHUB_WORKSPACE/src/config.toml
+            echo "template_file = 'template.md.jinja'" >> $GITHUB_WORKSPACE/src/config.toml
+            echo "[repositories]" >> $GITHUB_WORKSPACE/src/config.toml
+
+            echo "Fetching Last Release Branch SHAs"
+            for dir in $GITHUB_WORKSPACE/src/*/     # list directories in the form "/src/dirname/"
+            do
+              GIT_RELEASE_SHA=""
+              dir=${dir%*/}               # remove the trailing "/"
+              dir=$(echo "${dir##*/}")    # print everything after the final "/"
+
+              ## Looks for the last PRODUCTION tag added as the starting point for the release notes
+              GIT_RELEASE_SHA=$(cd $GITHUB_WORKSPACE/src/$dir && git log --oneline --tags="*production*" --reverse -n 1 --format=%H)
+              echo "Last Release Branch SHA - $dir - $GIT_RELEASE_SHA"
+              echo "$dir = { location = '/src/$dir', release_branch = '$GIT_RELEASE_SHA', next_branch = 'main' }" >> $GITHUB_WORKSPACE/src/config.toml
+            done
+
+        - name: Compile
+          run: |
+            cd ./src
+            docker login ghcr.io -u ${{ secrets.ACTION_PAT_USERNAME }} -p ${{ secrets.ACTION_PAT_TOKEN }}
+            docker run --rm -v $(pwd):/src ${{ env.SHORTCUT_RELEASE_HELPER_IMAGE }}
+
+        - name: Send   
+          uses: dawidd6/action-send-mail@v3
+          # https://github.com/marketplace/actions/send-email
+          with:
+            connection_url: ${{env_MAIL_URL}}
+            server_address: ${{env.MAIL_SERVER}}
+            server_port: ${{env.MAIL_SERVER_PORT}}
+            secure: true
+            
+            username: ${{env.MAIL_USERNAME}}
+            password: ${{env.MAIL_PASSWORD}}
+            
+            subject: ${{ env.RELEASE_NOTES_EMAIL_SUBJECT }}
+            to: ${{ env.RELEASE_NOTES_EMAIL_TO }}
+            from: ${{ env.RELEASE_NOTES_EMAIL_FROM }}
+            html_body: file://src/RELEASE_NOTES.md
+            convert_markdown: true
+            priority: low
