@@ -3,24 +3,12 @@ FROM rust:1.70-buster as builder
 RUN apt-get update
 RUN apt-get install -y jq curl maven
 
-# https://github.com/OpenAPITools/openapi-generator
-RUN mkdir -p ~/bin/openapitools \
-    && curl https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/bin/utils/openapi-generator-cli.sh > ~/bin/openapitools/openapi-generator-cli \
-    && chmod u+x ~/bin/openapitools/openapi-generator-cli \
-    && export OPENAPI_GENERATOR_CLI=~/bin/openapitools/ \
-    && export PATH=$PATH:$OPENAPI_GENERATOR_CLI \
-    && cp ~/bin/openapitools/openapi-generator-cli /usr/bin/openapi-generator-cli
+ENV OPENAPI_GENERATOR_VERSION=6.6.0
+RUN curl "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/$OPENAPI_GENERATOR_VERSION/openapi-generator-cli-$OPENAPI_GENERATOR_VERSION.jar" -o /usr/local/lib/openapi-generator.jar
 
 WORKDIR /usr/src/shortcut_release_helper
 COPY --chmod=700 bin/generate_openapi_client.sh bin/cleanup.sh bin/
 COPY --chmod=700 docker/openapi-generator-cli /usr/local/bin/
-
-RUN echo "export OPENAPI_GENERATOR_CLI=~/bin/openapitools/" >> ~/.bashrc
-RUN echo "export PATH=$PATH:'~/bin/openapitools'" >> ~/.bashrc
-
-RUN export OPENAPI_GENERATOR_CLI="~/bin/openapitools/" \
-    && export PATH="$PATH:~/bin/openapitools/" \
-    && ./bin/generate_openapi_client.sh
 
 ## Done to improve build times, ensures caching of dependencies independent of compilation
 COPY Cargo.toml .
