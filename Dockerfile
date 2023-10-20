@@ -9,15 +9,10 @@ RUN curl "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/
 WORKDIR /usr/src/shortcut_release_helper
 COPY --chmod=700 bin/generate_openapi_client.sh bin/cleanup.sh bin/
 COPY --chmod=700 docker/openapi-generator-cli /usr/local/bin/
-
-## Done to improve build times, ensures caching of dependencies independent of compilation
-COPY Cargo.toml .
-RUN mkdir src \
-    && echo "// dummy file" > src/lib.rs \
-    && cargo build --release || true
-
-COPY shortcut_release_helper shortcut_release_helper
-RUN cargo build --release
+COPY Cargo.toml Cargo.lock ./
+COPY shortcut_release_helper ./shortcut_release_helper/
+RUN ./bin/generate_openapi_client.sh
+RUN cargo build --release --bin shortcut_release_helper
 
 
 FROM debian:bullseye-slim
