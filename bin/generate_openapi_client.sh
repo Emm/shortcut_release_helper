@@ -2,10 +2,11 @@
 
 set -eu
 set -o pipefail
+set -x
 
 SHORTCUT_OPENAPI_SPEC_URL='https://developer.shortcut.com/api/rest/v3/shortcut.swagger.json'
-OUTPUT_DIR="$(dirname "$0")/../shortcut_client"
 ROOT_DIR="$(realpath "$(dirname "$0")/..")"
+OUTPUT_DIR="$ROOT_DIR/shortcut_client"
 
 CRATE_NAME="shortcut_client"
 CRATE_VERSION="3.0.0"
