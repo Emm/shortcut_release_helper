@@ -12,11 +12,8 @@ RUN mkdir -p ~/bin/openapitools \
     && cp ~/bin/openapitools/openapi-generator-cli /usr/bin/openapi-generator-cli
 
 WORKDIR /usr/src/shortcut_release_helper
-COPY bin/generate_openapi_client.sh bin/generate_openapi_client.sh
-COPY bin/cleanup.sh bin/cleanup.sh
-
-RUN chmod +x ./bin/generate_openapi_client.sh \
-    && chmod +x ./bin/cleanup.sh
+COPY --chmod=700 bin/generate_openapi_client.sh bin/cleanup.sh bin/
+COPY --chmod=700 docker/openapi-generator-cli /usr/local/bin/
 
 RUN echo "export OPENAPI_GENERATOR_CLI=~/bin/openapitools/" >> ~/.bashrc
 RUN echo "export PATH=$PATH:'~/bin/openapitools'" >> ~/.bashrc
@@ -51,6 +48,6 @@ RUN git config --global --add safe.directory "*"
 
 CMD ["/script/execute.sh"]
 
-COPY docker/execute.sh /script/execute.sh
+COPY --chmod=700 docker/execute.sh /script/execute.sh
 COPY --from=builder /usr/src/shortcut_release_helper/target/release /usr/local/bin/shortcut_release_helper
 
