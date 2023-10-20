@@ -2,6 +2,7 @@
 
 set -eu
 set -o pipefail
+set -x
 
 # Cleanup the generated code to ensure it compiles
 
