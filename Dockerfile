@@ -1,4 +1,4 @@
-FROM rust:1.67-buster as builder
+FROM rust:1.70-buster as builder
 
 RUN apt-get update
 RUN apt-get install -y dos2unix jq curl maven
