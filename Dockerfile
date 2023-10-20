@@ -1,7 +1,7 @@
 FROM rust:1.70-buster as builder
 
 RUN apt-get update
-RUN apt-get install -y dos2unix jq curl maven
+RUN apt-get install -y jq curl maven
 
 # https://github.com/OpenAPITools/openapi-generator
 RUN mkdir -p ~/bin/openapitools \
@@ -15,9 +15,7 @@ WORKDIR /usr/src/shortcut_release_helper
 COPY bin/generate_openapi_client.sh bin/generate_openapi_client.sh
 COPY bin/cleanup.sh bin/cleanup.sh
 
-RUN dos2unix ./bin/generate_openapi_client.sh \
-    && dos2unix ./bin/cleanup.sh \
-    && chmod +x ./bin/generate_openapi_client.sh \
+RUN chmod +x ./bin/generate_openapi_client.sh \
     && chmod +x ./bin/cleanup.sh
 
 RUN echo "export OPENAPI_GENERATOR_CLI=~/bin/openapitools/" >> ~/.bashrc
