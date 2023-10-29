@@ -1,0 +1,27 @@
+# Stage Release Notes
+
+compiled on {{ today() }}
+
+
+{%- for story in (stories | split_by_label("Release Notes") | first) %}
+* [sc-{{ story.id }}]({{ story.app_url }}) {{ story.name }}
+{%- endfor %}
+
+---
+
+## All Stories
+
+{%- for story in stories %}
+* [sc-{{ story.id }}]({{ story.app_url }}) {{ story.name }}
+{%- endfor %}
+
+---
+
+## Changes missing story associations
+
+{%- for commitgroup in unparsed_commits %}
+### {{ commitgroup }}
+{%- for commit in unparsed_commits[commitgroup] %}
+* {{ commit.message | indent(2) }}
+{%- endfor %}
+{%- endfor %}

@@ -74,7 +74,7 @@ Ensure that the dependencies below (both utilities and libararies) are present i
 
 - [OpenSSL](https://www.openssl.org/)
 
-### Building
+### Building Locally
 
 Clone the repository.
 
@@ -82,15 +82,52 @@ Generate the OpenAPI client via `./bin/generate_openapi_client.sh`.
 
 Build the application via `cargo build`
 
+### Building with Docker
+
+Clone the repository.
+
+If desired Regenerate the OpenAPI client via `./bin/generate_openapi_client.sh`.
+
+Build the application via `docker build . -t shortcut_release_helper:local`
+
 # Usage
+
+Build a Configuration and jinja Template file
+
+## Locally
 
 ```bash
 $ shortcut_release_helper --version 3.22.1 --name "My new release" notes.md
 ```
 
+## Docker
+
+Mount `/src` to a local folder to capture generated report
+Mount all repos to be scanned under the `/src` folder. 
+Mount the `config.toml` and `template.md.jinja` under the `/src` folder.
+
+Output Report will be written to the `/src` folder
+
+```bash
+docker run --rm -v $(pwd)/repos:/src \
+    -v $(pwd)/config.toml:/src/config.toml \
+    -v $(pwd)/examples/template.md.jinja:/src/template.md.jinja \
+    shortcut_release_helper:local
+```
+
+## Github Action
+
+GitHub Workflow example provided under `./examples`
+
 ## Configuration
 
 The software expects a `config.toml` configuration file in the current folder.
+
+* The `path_to_the_repo` may be absolute or relative to the current directory.
+* The `branch_name_or_commit` must be a branch name or full SHA. The short SHA will not work.
+  * To pull latest commit SHA from a branch using the `production` tag
+
+    `git log --oneline --tags="*production*" --reverse -n 1 --format=%H`
 
 It has the following format:
 
@@ -108,11 +145,12 @@ repo2_name = { location = "<path_to_the_repo>", release_branch = "<branch_name_o
 repo3_name = { location = "<path_to_the_repo>", release_branch = "<branch_name_or_commit>", next_branch = "<branch_name_or_commit>" }
 ```
 
-The `path_to_the_repo` may be absolute or relative to the current directory.
 
 ## Building the template
 
 The template file is a Jinja Markdown template, which lays out the data retrieved from Shortcut.
+
+Example provided: `./examples/template.md.jinja`
 
 ### Input data
 
