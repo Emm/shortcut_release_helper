@@ -92,6 +92,8 @@ Build the application via `docker build . -t shortcut_release_helper:local`
 
 # Usage
 
+In each repository used in `config.toml`, see below, you need all branches you use to be checked out locally.
+
 Build a Configuration and jinja Template file
 
 ## Locally
@@ -144,7 +146,6 @@ repo1_name = { location = "<path_to_the_repo>", release_branch = "<branch_name_o
 repo2_name = { location = "<path_to_the_repo>", release_branch = "<branch_name_or_commit>", next_branch = "<branch_name_or_commit>" }
 repo3_name = { location = "<path_to_the_repo>", release_branch = "<branch_name_or_commit>", next_branch = "<branch_name_or_commit>" }
 ```
-
 
 ## Building the template
 
