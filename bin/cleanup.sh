@@ -29,6 +29,7 @@ PARAMS_WITH_HYPHENS=(
     'story-public-id'
     'task-public-id'
     'workflow-public-id'
+    'key-result-public-id'
 );
 for param_with_hyphen in ${PARAMS_WITH_HYPHENS[@]}; do
     replacement=$(echo "$param_with_hyphen" | sed "s/-/_/g")
