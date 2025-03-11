@@ -15,6 +15,7 @@ PARAMS_WITH_HYPHENS=(
     'entity-template-public-id'
     'epic-public-id'
     'group-public-id'
+    'integration-public-id'
     'iteration-public-id'
     'label-public-id'
     'linked-file-public-id'
