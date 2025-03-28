@@ -53,7 +53,6 @@ jobs:
             cp $GITHUB_WORKSPACE/notifications/template.md.jinja $GITHUB_WORKSPACE/src
             
             echo "Generating config.toml"
-            echo "api_key = '$SHORTCUT_TOKEN'" > $GITHUB_WORKSPACE/src/config.toml
             echo "template_file = 'template.md.jinja'" >> $GITHUB_WORKSPACE/src/config.toml
             echo "[repositories]" >> $GITHUB_WORKSPACE/src/config.toml
 
@@ -76,7 +75,7 @@ jobs:
             docker login ghcr.io -u ${{ secrets.ACTION_PAT_USERNAME }} -p ${{ secrets.ACTION_PAT_TOKEN }}
             docker run --rm -v $(pwd):/src ${{ env.SHORTCUT_RELEASE_HELPER_IMAGE }}
 
-        - name: Send   
+        - name: Send
           uses: dawidd6/action-send-mail@v3
           # https://github.com/marketplace/actions/send-email
           with:
@@ -84,10 +83,10 @@ jobs:
             server_address: ${{env.MAIL_SERVER}}
             server_port: ${{env.MAIL_SERVER_PORT}}
             secure: true
-            
+
             username: ${{env.MAIL_USERNAME}}
             password: ${{env.MAIL_PASSWORD}}
-            
+
             subject: ${{ env.RELEASE_NOTES_EMAIL_SUBJECT }}
             to: ${{ env.RELEASE_NOTES_EMAIL_TO }}
             from: ${{ env.RELEASE_NOTES_EMAIL_FROM }}

@@ -9,7 +9,7 @@
 //! # Usage
 //!
 //! ```bash
-//! $ ./shortcut_release_helper \
+//! $ SHORTCUT_TOKEN="<your_shortcut_api_key>" ./shortcut_release_helper \
 //!     --version 3.4.0 \
 //!     --name 'Super release' \
 //!     --description 'Exciting release' \
@@ -21,7 +21,6 @@
 //! This tool expects a `config.toml`, in the current working directory, like so:
 //!
 //! ```toml
-//! api_key = "<your_shortcut_api_key>"
 //! template_file = "template.md.jinja"
 //!
 //! [repositories]
@@ -40,6 +39,7 @@ extern crate derive_more;
 
 use std::{
     collections::{HashMap, HashSet},
+    env::{var, VarError},
     fs,
     path::PathBuf,
     time::Instant,
@@ -59,10 +59,10 @@ use shortcut_client::models::{Epic, Story};
 use tracing::{debug, info};
 use types::{RepoToCommits, RepoToHeadCommit};
 
-use crate::{config::AppConfig, shortcut::parse_commits, shortcut::ShortcutClient};
 use crate::{
-    shortcut::StoryLabelFilter,
-    types::{RepositoryConfiguration, RepositoryName},
+    config::AppConfig,
+    shortcut::{parse_commits, ShortcutClient, StoryLabelFilter},
+    types::{RepositoryConfiguration, RepositoryName, ShortcutApiKey},
 };
 
 mod config;
@@ -172,6 +172,10 @@ pub struct Release<'a> {
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     let args = Args::parse();
+    let api_key = ShortcutApiKey::new(var("SHORTCUT_TOKEN").map_err(|err| match err {
+        VarError::NotPresent => anyhow!("Missing SHORTCUT_TOKEN environment variable"),
+        VarError::NotUnicode(_) => err.into(),
+    })?);
     let config = AppConfig::parse(&PathBuf::from("config.toml"))?;
     let template_content = fs::read_to_string(&config.template_file)?;
     let template = template::FileTemplate::new(&template_content)?;
@@ -200,7 +204,7 @@ async fn main() -> Result<()> {
     let exclude_story_ids = HashSet::from_iter(args.exclude_story_id.iter().copied());
     let parsed_commits = parse_commits(repo_names_and_commits, &exclude_story_ids)?;
     debug!("Got result {:?}", parsed_commits);
-    let shortcut_client = ShortcutClient::new(&config.api_key);
+    let shortcut_client = ShortcutClient::new(&api_key);
     let release_content = shortcut_client
         .get_release(
             parsed_commits,
