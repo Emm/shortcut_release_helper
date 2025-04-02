@@ -9,7 +9,7 @@
 //! # Usage
 //!
 //! ```bash
-//! $ SHORTCUT_TOKEN="<your_shortcut_api_key>" ./shortcut_release_helper \
+//! $ ./shortcut_release_helper \
 //!     --version 3.4.0 \
 //!     --name 'Super release' \
 //!     --description 'Exciting release' \
@@ -170,10 +170,11 @@ pub struct Release<'a> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let _ = dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
     let args = Args::parse();
     let api_key = ShortcutApiKey::new(var("SHORTCUT_TOKEN").map_err(|err| match err {
-        VarError::NotPresent => anyhow!("Missing SHORTCUT_TOKEN environment variable"),
+        VarError::NotPresent => anyhow!("Missing SHORTCUT_TOKEN environment variable. Please provide it in a .env file or set it in your environment."),
         VarError::NotUnicode(_) => err.into(),
     })?);
     let config = AppConfig::parse(&PathBuf::from("config.toml"))?;

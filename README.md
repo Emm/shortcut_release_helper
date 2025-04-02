@@ -94,7 +94,7 @@ Build the application via `docker build . -t shortcut_release_helper:local`
 
 In each repository used in `config.toml`, see below, you need all branches you use to be checked out locally.
 
-Additionally, a Shortcut API token should be provided via `SHORTCUT_TOKEN` environment variable,
+Additionally, a Shortcut API token should be provided via `SHORTCUT_TOKEN` environment variable or `.env` file,
 see https://help.shortcut.com/hc/en-us/articles/205701199-Shortcut-API-Tokens
 
 Build a Configuration and jinja Template file
@@ -102,7 +102,7 @@ Build a Configuration and jinja Template file
 ## Locally
 
 ```bash
-$ SHORTCUT_TOKEN='<your_api_key>' shortcut_release_helper --version 3.22.1 --name "My new release" notes.md
+$ shortcut_release_helper --version 3.22.1 --name "My new release" notes.md
 ```
 
 ## Docker
@@ -115,6 +115,7 @@ Output Report will be written to the `/src` folder
 
 ```bash
 docker run --rm -v $(pwd)/repos:/src \
+    --env-file=.env
     -v $(pwd)/config.toml:/src/config.toml \
     -v $(pwd)/examples/template.md.jinja:/src/template.md.jinja \
     shortcut_release_helper:local
