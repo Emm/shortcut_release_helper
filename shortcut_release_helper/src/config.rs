@@ -8,11 +8,10 @@ use std::{
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::types::{RepositoryConfiguration, RepositoryName, ShortcutApiKey};
+use crate::types::{RepositoryConfiguration, RepositoryName};
 
 #[derive(Debug, PartialEq, Eq, Deserialize)]
 pub struct AppConfig {
-    pub api_key: ShortcutApiKey,
     pub template_file: PathBuf,
     pub repositories: HashMap<RepositoryName, RepositoryConfiguration>,
 }

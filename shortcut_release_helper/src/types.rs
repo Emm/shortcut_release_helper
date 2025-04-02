@@ -1,13 +1,17 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, string::ToString};
 
 use git2::Oid as GitOid;
 use serde::{Deserialize, Serialize, Serializer};
-use std::string::ToString;
 
 /// Name of the Shortcut instance
-#[derive(Debug, PartialEq, Eq, Hash, Clone, AsRef, Deserialize, Display)]
-#[serde(transparent)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, AsRef, Display)]
 pub struct ShortcutApiKey(String);
+
+impl ShortcutApiKey {
+    pub fn new(key: String) -> Self {
+        ShortcutApiKey(key)
+    }
+}
 
 /// Name of the repository, must be unique
 #[derive(Debug, PartialEq, Eq, Hash, Clone, AsRef, Deserialize, Display, Serialize)]

@@ -3,3 +3,4 @@ members = [
     "shortcut_client",
     "shortcut_release_helper",
 ]
+resolver = "2"
