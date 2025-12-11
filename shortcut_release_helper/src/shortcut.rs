@@ -66,8 +66,8 @@ pub fn parse_commits(
     exclude_story_ids: &HashSet<StoryId>,
 ) -> Result<Commits> {
     lazy_static! {
-        static ref SHORTCUT_RE: Regex =
-            Regex::new(r"(?:\[sc-|\[ch|story/)(\d+)").expect("Could not compile SHORTCUT_RE");
+        static ref SHORTCUT_RE: Regex = Regex::new(r"(?:(\[|/)sc-|(\[|/)ch|story/)(\d+)")
+            .expect("Could not compile SHORTCUT_RE");
     };
     let mut story_commits: HashMap<StoryId, RepoToCommits> = HashMap::new();
     let mut unparsed_commits: RepoToCommits = HashMap::new();
@@ -79,7 +79,7 @@ pub fn parse_commits(
                 .and_then(|message| {
                     SHORTCUT_RE.captures(message).map(|captures| {
                         captures
-                            .get(1)
+                            .get(3)
                             .expect("Story id should be captured")
                             .as_str()
                     })
