@@ -249,7 +249,7 @@ impl<'a> FileTemplate<'a> {
 
     pub fn render_to_file(&self, release: &Release, output_file: &Path) -> Result<()> {
         let template = self.environment.get_template(TEMPLATE_NAME)?;
-        let file_content = template.render(&release)?;
+        let file_content = template.render(release)?;
         fs::write(output_file, &file_content)?;
         Ok(())
     }

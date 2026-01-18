@@ -157,10 +157,7 @@ impl ShortcutClient {
     ) -> Result<ReleaseContent> {
         let mut stories = self.get_stories(&commits).await?;
         if !story_label_filter.is_empty() {
-            stories = stories
-                .into_iter()
-                .filter(|story| story_label_filter.filter(story))
-                .collect();
+            stories.retain(|story| story_label_filter.filter(story));
         }
         let epics = self.get_epics(stories.iter()).await?;
         let Commits {

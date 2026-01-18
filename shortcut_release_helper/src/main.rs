@@ -138,12 +138,12 @@ fn print_summary(release: &ReleaseContent) {
     println!(
         "{}: {}",
         header_style.paint("Total stories"),
-        Green.paint(&release.stories.len().to_string())
+        Green.paint(release.stories.len().to_string())
     );
     println!(
         "\n{}: {}",
         header_style.paint("Total epics"),
-        Green.paint(&release.epics.len().to_string())
+        Green.paint(release.epics.len().to_string())
     );
     for (repo, commits) in &release.unparsed_commits {
         if !commits.is_empty() {
@@ -151,7 +151,7 @@ fn print_summary(release: &ReleaseContent) {
                 "\n{}{}: {}",
                 header_style.paint("Total unparsed commits in "),
                 Blue.paint(repo.as_ref()),
-                Red.paint(&commits.len().to_string())
+                Red.paint(commits.len().to_string())
             );
         }
     }

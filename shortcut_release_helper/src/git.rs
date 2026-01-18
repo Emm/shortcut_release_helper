@@ -24,7 +24,7 @@ pub struct UnreleasedCommits {
 
 impl<'a> Repository<'a> {
     pub fn new(configuration: &'a RepositoryConfiguration) -> Result<Self> {
-        let repository = GitRepository::open(&*configuration.location.as_ref())?;
+        let repository = GitRepository::open(configuration.location.as_ref())?;
         Ok(Self {
             repository,
             release_branch: &configuration.release_branch,
@@ -76,7 +76,7 @@ impl<'a> Repository<'a> {
     fn find_commit(&'a self, branch: &RepositoryReference) -> Result<GitCommit<'a>> {
         let maybe_reference = self
             .repository
-            .resolve_reference_from_short_name(&*branch.as_ref())
+            .resolve_reference_from_short_name(branch.as_ref())
             .map_or_else(
                 |err| {
                     if err.class() == GitErrorClass::Reference
@@ -93,7 +93,7 @@ impl<'a> Repository<'a> {
             let commit = reference.peel_to_commit()?;
             Ok(commit)
         } else {
-            let oid = GitOid::from_str(&*branch.as_ref())?;
+            let oid = GitOid::from_str(branch.as_ref())?;
             Ok(self.repository.find_commit(oid)?)
         }
     }
