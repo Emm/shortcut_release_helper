@@ -33,6 +33,7 @@ impl<'a> FileTemplate<'a> {
         );
         environment.add_filter("split_by_label", Self::split_by_label);
         environment.add_filter("split_by_epic", Self::split_by_epic);
+        environment.add_filter("has_label", Self::has_label);
         environment.add_filter("story_emoji", Self::story_emoji);
         environment.add_filter("indent", Self::indent);
         environment.add_filter("escape", Self::escape);
@@ -206,6 +207,29 @@ impl<'a> FileTemplate<'a> {
                 "no story_type attribute",
             ))
         }
+    }
+
+    fn has_label(
+        _state: &State,
+        epic_or_story: Value,
+        label: Value,
+    ) -> Result<Value, minijinja::Error> {
+        let label_name = if matches!(label.kind(), ValueKind::String) {
+            label.as_str().expect("Should be a string")
+        } else {
+            return Err(minijinja::Error::new(
+                ErrorKind::InvalidOperation,
+                "expected a string",
+            ));
+        };
+        let labels = epic_or_story.get_attr("labels")?;
+        let mut labels_iter = SeqIterator::new(labels)?;
+        let has_label = labels_iter.any(|label| {
+            label.get_attr("name").map_or(false, |name| {
+                name.as_str().map_or(false, |name| name == label_name)
+            })
+        });
+        Ok(Value::from(has_label))
     }
 
     /// Helper returning today's date, formatted according to a format string following
