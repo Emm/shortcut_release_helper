@@ -17,7 +17,7 @@ TEMPFILE=$(mktemp --suffix .json)
 # Remove the /api/v3/files endpoint, open API generator doesn't seem to handle form data
 # Remove epic's projects ids, because id can be null and lead parsing errors (projects seems to be a legacy feature anyway)
 curl "$SHORTCUT_OPENAPI_SPEC_URL" | \
-    jq '.definitions.PullRequestLabel.properties.id.type = "string" | del(.definitions.PullRequestLabel.properties.id.format) | del(.paths["/api/v3/files"]) | del(.definitions.Epic.properties.project_ids) | del(.definitions.Epic.properties.associated_groups)' \
+    jq '.definitions.PullRequestLabel.properties.id.type = "string" | del(.definitions.PullRequestLabel.properties.id.format) | del(.paths["/api/v3/files"]) | del(.definitions.Epic.properties.project_ids) | del(.definitions.Epic.properties.associated_groups) | .definitions.ThreadedComment.required -= ["text"]' \
     > "$TEMPFILE"
 
 if which openapi-generator-cli
