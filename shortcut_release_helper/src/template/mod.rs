@@ -116,9 +116,9 @@ impl<'a> FileTemplate<'a> {
             let labels = epic_or_story.get_attr("labels")?;
             let mut labels_iter = SeqIterator::new(labels)?;
             let has_label = labels_iter.any(|label| {
-                label.get_attr("name").map_or(false, |name| {
-                    name.as_str().map_or(false, |name| name == label_name)
-                })
+                label
+                    .get_attr("name")
+                    .is_ok_and(|name| name.as_str() == Some(label_name))
             });
             if has_label {
                 matched.push(epic_or_story)
@@ -225,9 +225,9 @@ impl<'a> FileTemplate<'a> {
         let labels = epic_or_story.get_attr("labels")?;
         let mut labels_iter = SeqIterator::new(labels)?;
         let has_label = labels_iter.any(|label| {
-            label.get_attr("name").map_or(false, |name| {
-                name.as_str().map_or(false, |name| name == label_name)
-            })
+            label
+                .get_attr("name")
+                .is_ok_and(|name| name.as_str() == Some(label_name))
         });
         Ok(Value::from(has_label))
     }

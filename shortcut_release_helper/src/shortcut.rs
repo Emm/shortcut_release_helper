@@ -1,10 +1,9 @@
 use std::collections::HashSet;
-use std::num::NonZeroU32;
 use std::{collections::HashMap, str::FromStr};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use futures::stream::FuturesUnordered;
-use futures::{Future, StreamExt, TryFutureExt};
+use futures::{Future, FutureExt, StreamExt, TryFutureExt};
 use governor::clock::QuantaClock;
 use governor::state::direct::StreamRateLimitExt;
 use governor::state::InMemoryState;
@@ -114,15 +113,13 @@ pub struct ShortcutClient {
 }
 
 impl ShortcutClient {
-    pub fn new(api_key: &ShortcutApiKey) -> Self {
+    pub fn new(api_key: &ShortcutApiKey, shortcut_api_quota: Quota) -> Self {
         let mut configuration = shortcut_cfg::Configuration::new();
         configuration.api_key = Some(shortcut_cfg::ApiKey {
             key: api_key.to_string(),
             prefix: None,
         });
-        let shortcut_api_limit: std::num::NonZeroU32 =
-            NonZeroU32::new(200u32).expect("Should be non-zero");
-        let rate_limiter = RateLimiter::direct(Quota::per_minute(shortcut_api_limit));
+        let rate_limiter = RateLimiter::direct(shortcut_api_quota);
         Self {
             configuration,
             rate_limiter,
@@ -133,20 +130,39 @@ impl ShortcutClient {
         &self,
         actions: impl Iterator<Item = impl Future<Output = Result<T, E>>>,
     ) -> Result<Vec<T>> {
-        let items = actions
-            .collect::<FuturesUnordered<_>>()
-            .ratelimit_stream(&self.rate_limiter)
-            .collect::<Vec<_>>()
-            .await;
-        let (items, errors): (Vec<_>, Vec<_>) = items.into_iter().partition(Result::is_ok);
-        let items = items.into_iter().map(Result::unwrap).collect::<Vec<_>>();
-        let errors = errors
-            .into_iter()
-            .map(Result::unwrap_err)
-            .collect::<Vec<_>>();
-        if !errors.is_empty() {
-            bail!("Got the following errors: {:?}", errors);
+        let mut items = Vec::new();
+
+        // Rate-limit the input, not the results
+        let mut actions_stream =
+            futures::stream::iter(actions.map(Box::pin)).ratelimit_stream(&self.rate_limiter);
+
+        let mut futures = FuturesUnordered::new();
+
+        let mut closed = false;
+
+        // Don't poll the input when it's closed, otherwise it may return None infinitely
+        // without select! seeing more results.
+        while !closed {
+            futures::select! {
+                fut = actions_stream.next().fuse() => {
+                    if let Some(fut) = fut {
+                        futures.push(fut);
+                    } else {
+                        closed = true;
+                    }
+                }
+                out = futures.next() => {
+                    if let Some(res) = out {
+                        items.push(res.map_err(|err| anyhow!(format!("{:?}", err)))?);
+                    }
+                }
+            }
         }
+        // Drain the rest
+        while let Some(res) = futures.next().await {
+            items.push(res.map_err(|err| anyhow!(format!("{:?}", err)))?);
+        }
+
         Ok(items)
     }
 

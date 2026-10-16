@@ -140,6 +140,7 @@ It has the following format:
 ```toml
 # Template file, see below
 template_file = "template.md.jinja"
+#shortcut_api_limit_per_minute = 200
 
 # A list of one or more repository
 [repositories]
